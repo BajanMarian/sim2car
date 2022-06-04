@@ -155,7 +155,7 @@ public class MobilityEngine {
 	 * the traffic light to that cell. The traffic light must have the segment and the cell set.
 	 * It can fail if there is another car or traffic light on that same cell.
 	 * 
-	 * @param trafficLight	the traffic light to be added to the cell queue
+	 * @param trafficLightMaster the traffic light to be added to the cell queue
 	 * @return true	if the cell has been added successfully, false otherwise
 	 */
 	public boolean addTrafficLight(GeoTrafficLightMaster trafficLightMaster) {

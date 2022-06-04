@@ -37,7 +37,7 @@ public class TileApplicationServer extends Application {
 	int toPeers = 0;
 	public boolean isActive = true;
 
-	ApplicationType type = ApplicationType.TILES_APP;
+	ApplicationType type = ApplicationType.TRAFFIC_LIGHT_CONTROL_APP;
 
 	/** Sorted after their availability, and coordinates. */
 	public TreeSet<GenericTile> prioritet;
@@ -235,11 +235,11 @@ public class TileApplicationServer extends Application {
 			return;
 
 		switch (m.getType()) {
-		case REQUEST_ROUTE_TILES_SERVER:
-			responseServer2Peer(m.getSourceId(), (ArrayList<Point>) data[1]);
-			break;
-		default:
-			break;
+			case REQUEST_ROUTE_TILES_SERVER:
+				responseServer2Peer(m.getSourceId(), (ArrayList<Point>) data[1]);
+				break;
+			default:
+				break;
 		}
 	}
 

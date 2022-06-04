@@ -31,18 +31,18 @@ public class ApplicationUtils {
 	 */
 	public static Application activateApplicationCar( ApplicationType type, GeoCar car) {
 		switch (type) {
-		case ROUTING_APP:
-			return SimulationEngine.getInstance() != null ? new RoutingApplicationCar(car) : null;
-		case TILES_APP:
-			/* this application can be run only using the old simulator */
-			return EngineSimulation.getInstance() != null ? new TileApplicationCar(car) : null;
-		case STREET_VISITS_APP:
-			return SimulationEngine.getInstance() != null ? new StreetVisitsApplication(car) : null;
-		default:
-			return null;
+			case ROUTING_APP:
+				return SimulationEngine.getInstance() != null ? new RoutingApplicationCar(car) : null;
+			case TILES_APP:
+				/* this application can be run only using the old simulator */
+				return EngineSimulation.getInstance() != null ? new TileApplicationCar(car) : null;
+			case STREET_VISITS_APP:
+				return SimulationEngine.getInstance() != null ? new StreetVisitsApplication(car) : null;
+			default:
+				return null;
 		}
 	}
-	
+
 	/**
 	 * Create the application for current Traffic Light object
 	 * @param type - Application type
@@ -54,11 +54,11 @@ public class ApplicationUtils {
 		switch (type) {
 			case TRAFFIC_LIGHT_CONTROL_APP:
 				return SimulationEngine.getInstance() != null ? new ApplicationTrafficLightControl(trafficLight) : null;
-		default:
-			return null;
+			default:
+				return null;
 		}
 	}
-	
+
 	/**
 	 * Create the application for current Traffic Light object
 	 * @param type - Application type
@@ -70,8 +70,8 @@ public class ApplicationUtils {
 		switch (type) {
 			case SYNCHRONIZE_INTERSECTIONS_APP:
 				return SimulationEngine.getInstance() != null ? new SynchronizeIntersectionsApplication(trafficLight) : null;
-		default:
-			return null;
+			default:
+				return null;
 		}
 	}
 
@@ -83,18 +83,18 @@ public class ApplicationUtils {
 	 */
 	public static Application activateApplicationServer( ApplicationType type, GeoServer server) {
 		switch (type) {
-		case ROUTING_APP:
-			return SimulationEngine.getInstance() != null ? new RoutingApplicationServer(server) : null;
-		case TILES_APP:
-			/* this application can be run only using the old simulator */
-			return  EngineSimulation.getInstance() != null ? new TileApplicationServer(server) : null;
-		default:
-			return null;
+			case ROUTING_APP:
+				return SimulationEngine.getInstance() != null ? new RoutingApplicationServer(server) : null;
+			case TILES_APP:
+				/* this application can be run only using the old simulator */
+				return  EngineSimulation.getInstance() != null ? new TileApplicationServer(server) : null;
+			default:
+				return null;
 		}
 	}
 
 	/**
-	 * @param netInterfaces - String with active Applications
+	 * @param activeApplications - String with active Applications
 	 */
 	public static void parseApplications(String activeApplications) {
 		String activeApps[] = activeApplications.split(",");
