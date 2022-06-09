@@ -47,7 +47,7 @@ public class Globals {
 	public static int debug = 0;
 	
 	@Parameter(names = {"--carsCount"}, description = "The number of cars simulated.")
-    public static int carsCount = 150;
+    public static int carsCount = 5;
 	
 	@Parameter(names = {"--maxWaitingTime"}, description = "The maximum simulation time a car can wait at a traffic light.")
     public static int maxWaitingTime = 120;
@@ -92,7 +92,7 @@ public class Globals {
 	public static boolean useTreadPool = true;
 	
 	@Parameter(names = {"--useTrafficLights"}, description = "If true, use traffic lights")
-	public static boolean useTrafficLights = false;
+	public static boolean useTrafficLights = true;
 	
 	@Parameter(names = {"--useDynamicTrafficLights"}, description = "If true, use traffic lights")
 	public static boolean useDynamicTrafficLights = false;
@@ -129,7 +129,6 @@ public class Globals {
     /* "SPRINT" vs "EPIDEMIC" */
     @Parameter(names = {"--tilesFwAlg"}, description = "the accepted values are EPIDEMIC and SPRINT")
     public static String tilesForwardingAlgorithm = "SPRINT";
-	
 	
 	public static boolean gatherData = true;
 

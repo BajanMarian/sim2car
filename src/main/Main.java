@@ -22,7 +22,7 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		/* Read the simulators configuration file */
+		/* Read the simulator's configuration file */
 		try {
 			FileInputStream fis =  new FileInputStream("src/configurations/logging.properties");
 			LogManager.getLogManager().readConfiguration(fis);
@@ -42,7 +42,7 @@ public class Main {
 			System.exit(0);
 		}
 
-		// Download the traces
+		/* Download the traces */
 		Downloader.getInstance().downloadTraces(Globals.propertiesFile);
 
 		/* enable proxy connection if settings are present */

@@ -10,7 +10,7 @@ public class NetworkUtils {
 	/**
 	 * Create the network interface for current car object
 	 * @param type - network interface type
-	 * @param car - Car object
+	 * @param entity - Car object
 	 * @return
 	 */
 	public static NetworkInterface activateNetworkInterface( NetworkType type, Entity entity)
@@ -30,9 +30,8 @@ public class NetworkUtils {
 	{
 		String networkInterfaces[] = netInterfaces.split(",");
 		Globals.activeNetInterfaces = new Vector<NetworkType>();
-		for( String networkInterface : networkInterfaces )
-		{
-			Globals.activeNetInterfaces.add( NetworkType.valueOf("Net_"+networkInterface));
+		for( String networkInterface : networkInterfaces ) {
+			Globals.activeNetInterfaces.add(NetworkType.valueOf("Net_"+networkInterface));
 		}
 	}
 }

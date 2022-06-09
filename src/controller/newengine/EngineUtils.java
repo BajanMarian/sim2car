@@ -25,6 +25,9 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import application.Application;
@@ -59,9 +62,15 @@ import controller.network.NetworkWiFi;
  *
  */
 public final class EngineUtils {
-	
+
     /** Logger used by this class */
-    private static final transient Logger logger = Logger.getLogger(EngineUtils.class.getName());
+    private static final transient Logger logger;
+
+	static {
+		logger = Logger.getLogger(EngineUtils.class.getName());
+		/* uncomment the following line in order to log to console */
+		//logger.addHandler(new ConsoleHandler());
+	}
     
 	/* for traffic entities id */
 	static int count = 0;
@@ -70,7 +79,7 @@ public final class EngineUtils {
 	static double latEdge = 0d, lonEdge = 0d;
 	static long rows = 0, cols = 0;
 	
-	private EngineUtils() {}
+	private EngineUtils() { }
 
 	/**
 	 * Return a list of cars from car traces.
@@ -81,6 +90,9 @@ public final class EngineUtils {
 	 * 								the cars we read for this simulation
 	 */
 	static TreeMap<Long,GeoCar> getCars(String carListFilename, Viewer viewer, MobilityEngine mobilityEngine) {
+
+		System.out.println("Cars data are read from " + carListFilename);
+
 		FileInputStream fstream = null;
 		TreeMap<Long,GeoCar> cars = new TreeMap<Long,GeoCar>();
 
@@ -147,7 +159,8 @@ public final class EngineUtils {
 				ex.printStackTrace();
 			}
 		}
-		System.out.println("cars" + cars.size());
+		System.out.println("\n Number of cars specified in Globals " + Globals.carsCount);
+		System.out.println(" Number of cars in the simulator " + cars.size() + "\n");
 		return cars;
 	}
 	
@@ -161,6 +174,9 @@ public final class EngineUtils {
 	 * 
 	 */
 	static TreeMap<Long,GeoServer> getServers(String serverListFilename, Viewer viewer, MobilityEngine mobilityEngine) {
+
+		System.out.println("Server data are read from " + serverListFilename);
+
 		MapConfig mapConfig = SimulationEngine.getInstance().getMapConfig();
 		FileInputStream fstream = null;
 		SphericalMercator mercator = new SphericalMercator();
@@ -232,7 +248,8 @@ public final class EngineUtils {
 		/* Add other servers to the map */
 		computeServersPositions(serversList, servers);
 		viewer.addServers(serversList);
-		System.out.println(servers.size() + " " + count);
+		System.out.println("The number of server is " + servers.size());
+		System.out.println("Total computation: cars + server = " + count);
 		/* Compute the neighbor servers of each server */
 		computeServerNeighbors(servers);
 
@@ -319,7 +336,7 @@ public final class EngineUtils {
 			}
 		}
 		
-		System.out.println(servers.size());
+		System.out.println("Counted servers when computeServersPositions(): " + servers.size());
 	}
 	
 	private static void addTrafficLightApps(GeoTrafficLightMaster master) {
@@ -333,12 +350,13 @@ public final class EngineUtils {
 		/* Create each application which is defined for traffic light*/
 		ApplicationType type = ApplicationType.TRAFFIC_LIGHT_CONTROL_APP;
 		Application app = ApplicationUtils.activateApplicationTrafficLight(type, master);
-		if( app == null )
-		{
+		if( app == null ) {
 			logger.info(" Failed to create application with type " + type);
+			System.err.println("==Failed to create application with type " + type);
+		} else {
+			//System.out.println("==Succeeded create application with type " + type);
+			master.addApplication(app);
 		}
-		else
-			master.addApplication( app );
 		
 		if (Globals.useDynamicTrafficLights) {
 			/* Create each application which is defined for traffic light*/

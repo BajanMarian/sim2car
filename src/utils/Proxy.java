@@ -26,7 +26,6 @@ public class Proxy {
 		System.setProperty("http.proxyPort", Globals.httpProxyPort);
 		Authenticator.setDefault(new Authenticator() {
 		    protected PasswordAuthentication getPasswordAuthentication() {
-
 		        return new PasswordAuthentication(Globals.httpProxyUser,Globals.httpProxyPassword.toCharArray());
 		    }
 		});

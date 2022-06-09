@@ -1,7 +1,9 @@
 package downloader;
 
 import java.io.File;
-
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import model.parameters.Globals;
 
 /**
@@ -26,28 +28,28 @@ public class Downloader {
 	 * Extract the city name from the give properties file path
 	 */
 	private void extractCity(String propFile) {
-		
-		String path [] = Globals.propertiesFile.split("\\\\");
-		System.out.println("Prop file path: " + Globals.propertiesFile);
-		System.out.println("Prop file: " + path[path.length -1]);
-		
-		// Extract city
-		String propF [] = path[path.length -1].split(".p");
-		System.out.println("City: " + propF[0]);
-		System.out.println();
-		
-		city = propF[0];
+
+		Pattern filePattern = Pattern.compile("([A-Za-z]*)\\.properties");
+		Matcher m = filePattern.matcher(propFile);
+		if (m.find()) {
+			this.city = m.group(1);
+		} else {
+			System.err.println("Properties file should have .properties as extension");
+		}
+
+		System.out.println("Traffic will be simulated in " + city + "\n");
 	}
 	
 	public void downloadTraces(String propFile) {
-		
+
 		// Extract the city name
 		extractCity(propFile);
-		
+
 		if (checkIfTracesExist(this.city)) {
-			System.out.println("Trace files exist - Skipping DOWNLOAD STEP");
+			System.out.println("Skip download step because trace files already exist!\n");
 		} else {
-			System.out.println("Trace files don't exist - Starting DOWNLOAD STEP");
+			System.out.println("Start download step because trace files cannot be found! Downloading ... \n");
+
 			DownloadCore core = new DownloadCore();
 			core.execute(this.city);
 		}
@@ -59,16 +61,17 @@ public class Downloader {
 	private boolean checkIfTracesExist(String city) {
 		
 		try {
-			File curDir = new File(".");
-			File f1 = new File(curDir.getAbsolutePath() + File.separator + "rawdata" +
-							File.separator + "traces" + File.separator + city + "cabs");
-			File f2 = new File(curDir.getAbsolutePath() + File.separator + "processeddata" +
-					File.separator + "traces" + File.separator + city);
+			String cwd = System.getProperty("user.dir");
+			String cabsTracesPath = Paths.get(cwd, "rawdata", "traces", city + "cabs").toString();
+			String cityTracesPath = Paths.get(cwd, "processeddata", "traces", city).toString();
+
+			File cabsTraces = new File(cabsTracesPath);
+			File cityTraces = new File(cityTracesPath);
 			
-			if (f1.exists() && f2.exists())
+			if (cabsTraces.exists() && cityTraces.exists())
 				return true;
-			
-		}catch (SecurityException e) {
+
+		} catch (SecurityException e) {
 			System.err.println("You don't have read rights");
 			e.printStackTrace();
 		}

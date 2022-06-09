@@ -68,6 +68,7 @@ public class Viewer {
 	
 	public void addServers(ArrayList<GeoServer> servers) {
 		if (Globals.showGUI) {
+			// !!!DISPLAY RADIUS of SERVERS
 			//view.initLocationServer(servers);
 		}
 	}

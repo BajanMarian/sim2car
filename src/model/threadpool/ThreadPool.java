@@ -38,7 +38,7 @@ public class ThreadPool {
 		/**
 		 * default number of threads in the pool - the runtime available processors
 		 */
-		System.out.println(" Get cores size is " + corePoolSize);
+		System.out.println("Get cores size is " + corePoolSize);
 		this.executor = new ScheduledThreadPoolExecutor(corePoolSize, new Sim2CarThreadFactory());
 		this.executor.setMaximumPoolSize(maxPoolSize);
 		
