@@ -122,8 +122,8 @@ public class TileApplicationCar extends Application {
 		MapPoint currentPos = car.getCurrentPos();
 
 		/*
-		 * If the car at the anterior positon hasn't a route established and now
-		 * it has should get the id-s of the tiles from the local applications
+		 * If the car at the anterior position hasn't a route established and now
+		 * it has should get the id-s of the tiles from the local application
 		 * memory.
 		 */
 		if (!wasOccupied && currentPos.occupied) {

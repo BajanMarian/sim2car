@@ -47,7 +47,7 @@ public class Globals {
 	public static int debug = 0;
 	
 	@Parameter(names = {"--carsCount"}, description = "The number of cars simulated.")
-    public static int carsCount = 5;
+    public static int carsCount = 150;
 	
 	@Parameter(names = {"--maxWaitingTime"}, description = "The maximum simulation time a car can wait at a traffic light.")
     public static int maxWaitingTime = 120;
@@ -68,7 +68,7 @@ public class Globals {
     public static boolean loadGraph = false;
 	
 	@Parameter(names = {"--simulationDays"}, description = "Duration of the simulation in days.")
-    public static int simulationDays = 7;
+    public static int simulationDays = 1;
 	
 	@Parameter(names = {"--randomCarsSelect"}, description = "Set the percentage of cars to use in the simulation: 0.0 == none, 1.0 = all.")
     public static double randomCarsSelect = 1.0;
@@ -95,7 +95,7 @@ public class Globals {
 	public static boolean useTrafficLights = true;
 	
 	@Parameter(names = {"--useDynamicTrafficLights"}, description = "If true, use traffic lights")
-	public static boolean useDynamicTrafficLights = false;
+	public static boolean useDynamicTrafficLights = true;
 	
 	@Parameter(names = {"--carIdFuelStatistics"}, description = "The car id used to retrieve fuel consumption statistics.")
     public static long carIdFuelStatistics = 10;
@@ -139,7 +139,7 @@ public class Globals {
 	@Parameter(names = {"--activeApps"}, description = "the accepted values ROUTING,TILES,STREET_VISITS,TRAFFIC_LIGHT_CONTROL."
 													 + "Please see ApplicationType for more details\n."
 													 + "Multiple applications can be passed using --activeApps=app1,app2,app3,..,appn")
-	public static String activeApps = "ROUTING,TRAFFIC_LIGHT_CONTROL";
+	public static String activeApps = "ROUTING,SYNCHRONIZE_INTERSECTIONS";
 	/* The default application is ROUTING_APP */
 	public static Vector<ApplicationType> activeApplications;
 

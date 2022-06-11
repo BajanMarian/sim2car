@@ -69,7 +69,7 @@ public final class EngineUtils {
 	static {
 		logger = Logger.getLogger(EngineUtils.class.getName());
 		/* uncomment the following line in order to log to console */
-		//logger.addHandler(new ConsoleHandler());
+		logger.addHandler(new ConsoleHandler());
 	}
     
 	/* for traffic entities id */
@@ -112,7 +112,8 @@ public final class EngineUtils {
 					break;
 
 				if (count == 183)
-					System.out.println("read ");
+					System.out.println("Read data for at least 183 cars!");
+
 				logger.info(" We opened " + count + ". " + line);
 				StringTokenizer st = new StringTokenizer(line, " ", false);
 				st.nextToken(); /* <cab */
@@ -120,11 +121,13 @@ public final class EngineUtils {
 				srcId = srcId.substring(4, srcId.length() - 1); /* extract just the number */
 				String path = SimulationEngine.getInstance().getMapConfig().getTracesPath() + "joints_" + srcId + ".txt";
 				List<GeoCarRoute> routes = Utils.readCarTraces(path);
-				
+
+				// Add new car and set its routes
 				GeoCar car = new GeoCar(count);
 				car.setRoutes(routes);
+
 				if (count == 183)
-					System.out.println("read +");
+					System.out.println("Reading more ...");
 
 				/* Create each network interface which is defined */
 				for( NetworkType type : Globals.activeNetInterfaces )
@@ -137,9 +140,10 @@ public final class EngineUtils {
 				for( ApplicationType type : Globals.activeApplications )
 				{
 					Application app = ApplicationUtils.activateApplicationCar(type, car);
-					if( app == null )
+					if( app == null)
 					{
-						logger.info(" Failed to create application with type " + type);
+						if(type == ApplicationType.ROUTING_APP || type == ApplicationType.TILES_APP)
+							logger.info(" Failed to create application with type " + type);
 						continue;
 					}
 					car.addApplication( app );
@@ -159,8 +163,8 @@ public final class EngineUtils {
 				ex.printStackTrace();
 			}
 		}
-		System.out.println("\n Number of cars specified in Globals " + Globals.carsCount);
-		System.out.println(" Number of cars in the simulator " + cars.size() + "\n");
+		System.out.println("===== Number of cars specified in Globals: " + Globals.carsCount + " =====");
+		System.out.println("===== Number of cars in the simulator: " + cars.size() + " =====\n");
 		return cars;
 	}
 	
@@ -184,7 +188,6 @@ public final class EngineUtils {
 		ArrayList<GeoServer> serversList = new ArrayList<>();
 		
 		try {
-			logger.info("Path received " + serverListFilename);
 			fstream = new FileInputStream(serverListFilename);
 			BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 			String line;
@@ -248,8 +251,7 @@ public final class EngineUtils {
 		/* Add other servers to the map */
 		computeServersPositions(serversList, servers);
 		viewer.addServers(serversList);
-		System.out.println("The number of server is " + servers.size());
-		System.out.println("Total computation: cars + server = " + count);
+		System.out.println("===== Number of server: " + servers.size() + " =====");
 		/* Compute the neighbor servers of each server */
 		computeServerNeighbors(servers);
 
@@ -277,12 +279,12 @@ public final class EngineUtils {
 		s.addNetworkInterface(new NetworkWiFi(s));
 		
 		/* Create each application which is defined */
-		for( ApplicationType type : Globals.activeApplications )
-		{
+		for ( ApplicationType type : Globals.activeApplications ) {
 			Application app = ApplicationUtils.activateApplicationServer(type, s);
 			if( app == null )
 			{
-				logger.info(" Failed to create application with type " + type);
+				if (type == ApplicationType.ROUTING_APP || type == ApplicationType.TILES_APP)
+					logger.info(" Failed to create application with type " + type);
 				continue;
 			}
 			if( app.getType() == ApplicationType.ROUTING_APP )
@@ -336,7 +338,7 @@ public final class EngineUtils {
 			}
 		}
 		
-		System.out.println("Counted servers when computeServersPositions(): " + servers.size());
+		// System.out.println("Counted servers when computeServersPositions(): " + servers.size());
 	}
 	
 	private static void addTrafficLightApps(GeoTrafficLightMaster master) {
@@ -351,23 +353,24 @@ public final class EngineUtils {
 		ApplicationType type = ApplicationType.TRAFFIC_LIGHT_CONTROL_APP;
 		Application app = ApplicationUtils.activateApplicationTrafficLight(type, master);
 		if( app == null ) {
-			logger.info(" Failed to create application with type " + type);
-			System.err.println("==Failed to create application with type " + type);
+			logger.log(Level.SEVERE, "Failed to activate application with type " + type +
+					" for the new added traffic light master");
 		} else {
-			//System.out.println("==Succeeded create application with type " + type);
+//			 logger.info("Succeeded to active application with type " + type + "" +
+//					" for the new added traffic light master");
 			master.addApplication(app);
 		}
 		
 		if (Globals.useDynamicTrafficLights) {
-			/* Create each application which is defined for traffic light*/
+
+			/* Create each application which is defined for traffic light */
 			type = ApplicationType.SYNCHRONIZE_INTERSECTIONS_APP;
 			app = ApplicationUtils.activateApplicationSynchronizeTrafficLight(type, master);
-			if( app == null )
-			{
+			if( app == null ) {
 				logger.info(" Failed to create application with type " + type);
-			}
-			else
+			} else {
 				master.addApplication( app );
+			}
 		}
 	}
 	
@@ -385,14 +388,14 @@ public final class EngineUtils {
 		try {
 			fstream = new FileInputStream(file);
 			BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
-			String line;
-			
+
 			//Format:
 			//		  master id idNode wayidNode latNote lonNode
 			// 		  wayId direction lat lon segmentIndex cellIndex color
 			
 			/* Read data about traffic lights */
 			GeoTrafficLightMaster master = null;
+			String line;
 			while ((line = br.readLine()) != null) {
 				
 				StringTokenizer st = new StringTokenizer(line, " ", false);
@@ -409,7 +412,7 @@ public final class EngineUtils {
 					Long masterId = (long) count;
 					st.nextToken(); 	/* traffic light master id */
 					Long nodeId = Long.parseLong(st.nextToken()); 		/* node id */
-					Long wayId = Long.parseLong(st.nextToken()); 		/* way id" */
+					Long wayId = Long.parseLong(st.nextToken()); 		/* way id */
 					
 					Node node = mobilityEngine.streetsGraph.get(wayId).getNode(nodeId);
 					node.setWayId(wayId);
@@ -490,7 +493,7 @@ public final class EngineUtils {
 				
 				StringTokenizer st = new StringTokenizer(line, " ", false);
 				Long nodeId = Long.parseLong(st.nextToken()); /* node id */
-				Long wayId = Long.parseLong(st.nextToken()); /* way id" */
+				Long wayId = Long.parseLong(st.nextToken()); /* way id */
 				
 				Node node = mobilityEngine.streetsGraph.get(wayId).getNode(nodeId);
 				node.setWayId(wayId);

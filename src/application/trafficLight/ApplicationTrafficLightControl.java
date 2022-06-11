@@ -100,9 +100,9 @@ public class ApplicationTrafficLightControl extends Application {
 		PrintWriter writer = null;
 		try {
 			if (Globals.useDynamicTrafficLights)
-				writer = new PrintWriter(GenericParams.mapConfig.getCity() + "waitingTime&QueueLength_withDynamicTrafficLights.txt", "UTF-8");
+				writer = new PrintWriter(GenericParams.mapConfig.getCity() + "_waitingTime&QueueLength_withDynamicTrafficLights.txt", "UTF-8");
 			else if (Globals.useTrafficLights)
-				writer = new PrintWriter(GenericParams.mapConfig.getCity() + "waitingTime&QueueLength_withTrafficLights.txt", "UTF-8");
+				writer = new PrintWriter(GenericParams.mapConfig.getCity() + "_waitingTime&QueueLength_withTrafficLights.txt", "UTF-8");
 
 			writer.println("trafficLightMasterId avg_waiting_time[sec] avg_queue_length");
 			for( Map.Entry<Long, String> entry : queuesStatistics.entrySet() )

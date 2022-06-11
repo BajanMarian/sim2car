@@ -5,6 +5,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -92,6 +93,8 @@ public class TestSingleRomeTrace extends JFrame {
 	public static void main(String[] args) throws Exception {
 		TestSingleRomeTrace frame = new TestSingleRomeTrace();
 		frame.setVisible(true);
-		frame.addCab("res\\res\\romecabs\\22.txt");
+		String prjDir = System.getProperty("user.dir");
+		String pathToCab = Paths.get(prjDir, "processeddata/traces/rome/InterpolatedRome/22.txt").toString();
+		frame.addCab(pathToCab);
 	}
 }

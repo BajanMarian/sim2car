@@ -178,8 +178,7 @@ public class Viewer {
 	 * If the intersection already has a master traffic light, it updates that initial master
 	 * with the traffic light view for each way intersecting the current traffic light master
 	 * @param currentTrafficLightMaster
-	 * @return true - add new master traffic light; false - update an existing master traffic
-	 * light
+	 * @return true - add new master traffic light; false - update existing master traffic light
 	 */
 	public boolean addTrafficLightViews(GeoTrafficLightMaster currentTrafficLightMaster) {
 		Way currentWay, wayNeigh;
@@ -237,7 +236,7 @@ public class Viewer {
 			}
 			
 			/* ----------------------------------------------------------
-			 * This intersection does't have a master traffic light yet */
+			 * This intersection doesn't have a master traffic light yet */
 			
 			/* Add a traffic light view for each neighbor way that intersects the currentNode */
 			Vector<Long> wayNeighs = currentWay.neighs.get(currentNode.id);

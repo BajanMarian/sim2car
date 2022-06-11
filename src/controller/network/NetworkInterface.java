@@ -46,7 +46,7 @@ public abstract class NetworkInterface {
 
 	/**
 	 * 
-	 * @param o - object placed to be sent, it will be
+	 * @param m - object placed to be sent, it will be
 	 * serialized when we will send it. This gives the
 	 * liberty to look at the message header without
 	 * serializing it again

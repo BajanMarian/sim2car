@@ -10,7 +10,7 @@ public class NetworkUtils {
 	/**
 	 * Create the network interface for current car object
 	 * @param type - network interface type
-	 * @param entity - Car object
+	 * @param entity - Car or TrafficLight object
 	 * @return
 	 */
 	public static NetworkInterface activateNetworkInterface( NetworkType type, Entity entity)

@@ -2,6 +2,7 @@ package main;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -14,7 +15,12 @@ import downloader.Downloader;
 public class Main {
 
 	/** Logger used by this class */
-	private static final transient Logger logger = Logger.getLogger(Main.class.getName());
+	private static final transient Logger logger;
+
+	static {
+		logger = Logger.getLogger(Main.class.getName());
+		logger.addHandler(new ConsoleHandler());
+	}
 
 	public static String[] args;
 

@@ -101,8 +101,9 @@ public class SimulationEngine implements EngineInterface {
 
 	public void setUp() {
 		
-		entities.putAll(EngineUtils.getCars(getMapConfig().getTracesListFilename(), viewer, mobilityEngine) );
-		entities.putAll(EngineUtils.getServers(getMapConfig().getAccessPointsFilename(), viewer, mobilityEngine) );
+		entities.putAll(EngineUtils.getCars(getMapConfig().getTracesListFilename(), viewer, mobilityEngine));
+		entities.putAll(EngineUtils.getServers(getMapConfig().getAccessPointsFilename(), viewer, mobilityEngine));
+
 		if (Globals.useTrafficLights || Globals.useDynamicTrafficLights) {
 			entities.putAll(EngineUtils.getTrafficLights(getMapConfig().getTrafficLightsFilename(),
 					getMapConfig().getTrafficLightsLoaded(), viewer, mobilityEngine));
@@ -116,118 +117,114 @@ public class SimulationEngine implements EngineInterface {
 			}
 		}
 		
-		simulation = new Runnable() {
-			
-			@Override
-			public void run() {
-				
-				StringBuffer streetData = new StringBuffer();
-				
-				for (Entity e : entities.values()) {
-					if (e instanceof GeoCar) {
-						GeoCar car = (GeoCar) e;
-						if (car.getActive() == 1) {
-							car.start();
-						}
-					}
-					if (e instanceof GeoTrafficLightMaster) {
-						GeoTrafficLightMaster trafficLight = (GeoTrafficLightMaster) e;
-						if (trafficLight.getActive() == 1) {
-							trafficLight.start();
-						}
+		simulation = () -> {
+
+			StringBuffer streetData = new StringBuffer();
+
+			for (Entity e : entities.values()) {
+				if (e instanceof GeoCar) {
+					GeoCar car = (GeoCar) e;
+					if (car.getActive() == 1) {
+						car.start();
 					}
 				}
-				
+				if (e instanceof GeoTrafficLightMaster) {
+					GeoTrafficLightMaster trafficLight = (GeoTrafficLightMaster) e;
+					if (trafficLight.getActive() == 1) {
+						trafficLight.start();
+					}
+				}
+			}
+
+			viewer.updateCarPositions();
+			viewer.updateTrafficLightsColors();
+
+			while (run) {
+				time++;
+				for (Entity e : entities.values()) {
+					if (e instanceof GeoServer) {
+						// streetData.append(((GeoServer) e).runApplications());
+						//threadPool.submit(new ServerApplicationsRun((GeoServer) e));
+					}
+					if (e instanceof GeoCar && ((GeoCar) e).getActive() == 1) {
+						threadPool.submit(new CarApplicationsRun((GeoCar) e));
+					}
+					if (e instanceof GeoTrafficLightMaster && ((GeoTrafficLightMaster) e).getActive() == 1) {
+						threadPool.submit(new TrafficLightApplicationsRun((GeoTrafficLightMaster) e));
+					}
+
+				}
+
+				threadPool.waitForThreadPoolProcessing();
+
+				for (Entity e : entities.values()) {
+					if (e instanceof GeoCar && ((GeoCar) e).getActive() == 1) {
+//							((GeoCar) e).prepareMove();
+						threadPool.submit(new CarPrepareMove((GeoCar) e));
+					}
+				}
+
+				threadPool.waitForThreadPoolProcessing();
+
+				int activeCars = 0;
+				for (Entity e : entities.values()) {
+					if (e instanceof GeoCar && ((GeoCar) e).getActive() == 1) {
+//							((GeoCar) e).move();
+						threadPool.submit(new CarMove((GeoCar) e));
+						activeCars++;
+					}
+				}
+				threadPool.waitForThreadPoolProcessing();
+
+				for (Entity e : entities.values()) {
+					if (e instanceof GeoTrafficLightMaster && ((GeoTrafficLightMaster) e).getActive() == 1) {
+						threadPool.submit(new TrafficLightChangeColor((GeoTrafficLightMaster) e));
+					}
+				}
+				threadPool.waitForThreadPoolProcessing();
+
 				viewer.updateCarPositions();
 				viewer.updateTrafficLightsColors();
-				
-				while (run) {
-					time++;
+				viewer.setTime("" + time);
+
+				if( (time + 2)% RoutingApplicationParameters.SamplingInterval == 0)
+				{
+					System.out.println("WRITTING ROUTES TIME TO FILES!");
 					for (Entity e : entities.values()) {
-						if (e instanceof GeoServer) {
-							//streetData.append(((GeoCar) e).runApplications());
-							//threadPool.submit(new ServerApplicationsRun((GeoServer) e));
+						if (e instanceof GeoCar) {
+							((GeoCar) e).printRouteData(time + "_routes_time_" + ((GeoCar) e).getId() + ".txt");
 						}
-						if (e instanceof GeoCar && ((GeoCar) e).getActive() == 1) {
-							threadPool.submit(new CarApplicationsRun((GeoCar) e));
-						}
-						if (e instanceof GeoTrafficLightMaster && ((GeoTrafficLightMaster) e).getActive() == 1) {
-							threadPool.submit(new TrafficLightApplicationsRun((GeoTrafficLightMaster) e));
-						}
-						
 					}
 
-					threadPool.waitForThreadPoolProcessing();
-
-					for (Entity e : entities.values()) {
-						if (e instanceof GeoCar && ((GeoCar) e).getActive() == 1) {
-//							((GeoCar) e).prepareMove();
-							threadPool.submit(new CarPrepareMove((GeoCar) e));
-						}
-					}
-					
-					threadPool.waitForThreadPoolProcessing();
-					
-					int activeCars = 0;
-					for (Entity e : entities.values()) {
-						if (e instanceof GeoCar && ((GeoCar) e).getActive() == 1) {
-//							((GeoCar) e).move();
-							threadPool.submit(new CarMove((GeoCar) e));
-							activeCars++;
-						}
-					}
-					threadPool.waitForThreadPoolProcessing();
-					
-					for (Entity e : entities.values()) {
-						if (e instanceof GeoTrafficLightMaster && ((GeoTrafficLightMaster) e).getActive() == 1) {
-							threadPool.submit(new TrafficLightChangeColor((GeoTrafficLightMaster) e));
-						}
-					}
-					threadPool.waitForThreadPoolProcessing();
-
-					viewer.updateCarPositions();
-					viewer.updateTrafficLightsColors();
-					viewer.setTime("" + time);
-					
-					if( (time + 2)% RoutingApplicationParameters.SamplingInterval == 0)
-					{
-						System.out.println("WRITTING ROUTES TIME TO FILES!");
-						for (Entity e : entities.values()) {
-							if (e instanceof GeoCar) {
-								((GeoCar) e).printRouteData(time + "_routes_time_" + ((GeoCar) e).getId() + ".txt");
-							}
-						}
-
-					}
-					
-					try {
-						Thread.sleep(Globals.waitTime);
-					} catch (InterruptedException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-					
-					if (activeCars == 0) {
-						System.out.println("active cars 0");
-						run = false;
-					}
 				}
-				logger.info(""+time);
-				System.out.println(""+time);
-				PrintWriter writer = null;
+
 				try {
-					writer = new PrintWriter("road_data.txt", "UTF-8");
-				} catch (FileNotFoundException e1) {
-					e1.printStackTrace();
-				} catch (UnsupportedEncodingException e1) {
+					Thread.sleep(Globals.waitTime);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				if (writer != null) {
-					writer.print(streetData.toString());
-					writer.close();
+
+				if (activeCars == 0) {
+					System.out.println("active cars 0");
+					run = false;
 				}
-				logger.info("done!");
 			}
+			logger.info(""+time);
+			System.out.println(""+time);
+			PrintWriter writer = null;
+			try {
+				writer = new PrintWriter("road_data.txt", "UTF-8");
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+			} catch (UnsupportedEncodingException e1) {
+				e1.printStackTrace();
+			}
+			if (writer != null) {
+				writer.print(streetData.toString());
+				writer.close();
+			}
+			logger.info("done!");
 		};
 	}
 
@@ -286,7 +283,7 @@ public class SimulationEngine implements EngineInterface {
 
 	public void stopActions()
 	{
-		/* do the finalization actions for each entities*/
+		/* do the finalization actions for each entity*/
 		for (Entity e : entities.values()) {
 			if (e instanceof GeoCar && ((GeoCar) e).getActive() == 1) {
 				((GeoCar) e).stopApplications();
@@ -312,11 +309,10 @@ public class SimulationEngine implements EngineInterface {
 		switch(type)
 		{
 			case TILES_APP:
+			case STREET_VISITS_APP:
 				break;
 			case ROUTING_APP:
 				RoutingApplicationCar.stopGlobalApplicationActions();
-				break;
-			case STREET_VISITS_APP:
 				break;
 			case TRAFFIC_LIGHT_CONTROL_APP:
 				if (Globals.useTrafficLights || Globals.useDynamicTrafficLights)

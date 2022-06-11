@@ -24,7 +24,7 @@ import model.parameters.Globals;
 
 /***
  * The class represents the master traffic light of one intersection.
- * It's job is to receive message from cars that are waiting at one of it's traffic lights for green
+ * Its job is to receive message from cars that are waiting at one of its traffic lights for green
  * color and to "put them" to the corresponding waiting queue. 
  * @author Andreea
  *
@@ -55,7 +55,7 @@ public class GeoTrafficLightMaster extends Entity{
 		this.nodes.add(n);
 	}
 
-	/** Number of cars waiting for green for each direction 
+	/** Number of cars waiting for green for each direction
 	 *  Waiting time for the first car
 	 * key - (way id, direction)  value - (firstCarWaitingTime, noCarsWaiting)*/
 	private TreeMap<Pair<Long, Integer>, Pair<Long, Integer>> waitingQueue;
