@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,7 +21,7 @@ import controller.newengine.SimulationEngine;
 
 /**
  * This class represents the main structure of all the simulator components such as
- * cars and servers.
+ * cars, servers and traffic lights.
  * @author Alex
  *
  */
@@ -37,8 +38,7 @@ public class Entity {
 
 	/** List of network interfaces available for this entity. */
 	protected List<NetworkInterface> netInterfaces;
-	
-	
+
 	private final Logger logger;
 
 	public Entity(long id) {
@@ -46,6 +46,7 @@ public class Entity {
 		this.applications = new LinkedList<Application>();
 		this.netInterfaces = new LinkedList<NetworkInterface>();
 		this.logger = Logger.getLogger(Entity.class.getName());
+		this.logger.addHandler(new ConsoleHandler());
 	}
 
 	public void setId(long id) {
@@ -64,64 +65,56 @@ public class Entity {
 		return currentPos;
 	}
 
-	public List<GeoCar> getPeers() {
-		// TODO EngineSimulation
-		return null;
-	}
-	
-	/* Returns all the servers in the simulator */ 
-	public List<GeoServer> getServers() {
-		EngineInterface engine = SimulationEngine.getInstance();
-		if( engine == null )
-		{	
-			/* Use the old Engine of Simulator */
-			return EngineSimulation.getInstance().getServers();
-		}
-		else
-		{
-			return engine.getServers();
-		}
-	}
-	
-	/* Returns all the master traffic lights in the simulator */ 
-	public List<GeoTrafficLightMaster> getMasterTrafficLights() {
-		EngineInterface engine = SimulationEngine.getInstance();
-		if( engine == null )
-		{	
-			/* Use the old Engine of Simulator */
-			return EngineSimulation.getInstance().getMasterTrafficLights();
-		}
-		else
-		{
-			return engine.getMasterTrafficLights();
-		}
-	}
-
-	public GeoCar getPeer(long id) {
-		// TODO EngineSimulation
-		return null;
-	}
-
-	public GeoServer getServer(long id) {
-		// TODO EngineSimulation
-		return null;
+	public List<NetworkInterface> getNetworkInterfaces() {
+		return this.netInterfaces;
 	}
 
 	/**
 	 * Process a message.
 	 * Send that message for processing to all applications running.
+	 * @param
 	 */
-	public void process(Message m) {
-		
-		if (m == null) {
+	public void process(Message message) {
+
+		if (message == null) {
 			logger.log(Level.INFO, "Entity id: " + id + " finished all input messages for the tick");
 			return;
 		}
-		
-		Application app = this.getApplication(m.getAppType());
-		/* if this entity can process message m internally */
+
+		Application app = this.getApplication(message.getAppType());
+		/* if this entity can process the message internally; in other words,
+			if this entity has an application of that type installed on it */
 		if (app != null) {
-			app.process(m);
+			app.process(message);
+		}
+	}
+
+	/**
+	 * !!! This method SHOULD NOT be attached to an entity !!!
+	 * @returns all servers in the simulator
+	 */
+	public List<GeoServer> getServers() {
+		EngineInterface engine = SimulationEngine.getInstance();
+		if( engine == null ) {
+			/* Use the old Engine of Simulator */
+			return EngineSimulation.getInstance().getServers();
+		} else {
+			return engine.getServers();
+		}
+	}
+	
+	/**
+	 * !!! This method SHOULD NOT be attached to an entity !!!
+	 * @returns all the master traffic lights in the simulator
+	*/
+	public List<GeoTrafficLightMaster> getMasterTrafficLights() {
+
+		EngineInterface engine = SimulationEngine.getInstance();
+		if( engine == null ) {
+			/* Use the old Engine of Simulator */
+			return EngineSimulation.getInstance().getMasterTrafficLights();
+		} else {
+			return engine.getMasterTrafficLights();
 		}
 	}
 	
@@ -142,9 +135,9 @@ public class Entity {
 		}
 		this.netInterfaces.add(networkInterface);
 	}
-	
+
 	/**
-	 * Remove the network interface of the given type from the available
+	 * Removes the network interface of the given type from the available
 	 * interfaces. There should be just one interface per type. If there are
 	 * more than one with the same type, both will be removed.
 	 * 
@@ -160,7 +153,7 @@ public class Entity {
 	}
 
 	/**
-	 * Return the network interface with the specified type.
+	 * Returns the network interface with the specified type.
 	 * 
 	 * @param type The type of the network interface requested.
 	 * @return     The network interface or null if this Entity doesn't have it. 
@@ -207,16 +200,31 @@ public class Entity {
 	}
 
 	/**
-	 * Return the application with the specified type.
-	 * 
-	 * @param type The type of the network interface requested.
-	 * @return     The network interface or null if this Entity doesn't have it. 
+	 * Returns the application with the specified type.
+	 * @see application.Application
+	 * @param type The type of the application.
+	 * @return     The Application interface or null if this Entity doesn't have it.
 	 */
 	public Application getApplication(ApplicationType type) {
 		for (Application app : this.applications) {
 			if (app.getType() == type)
 				return app;
 		}
+		return null;
+	}
+
+	public List<GeoCar> getPeers() {
+		// TODO EngineSimulation
+		return null;
+	}
+
+	public GeoCar getPeer(long id) {
+		// TODO EngineSimulation
+		return null;
+	}
+
+	public GeoServer getServer(long id) {
+		// TODO EngineSimulation
 		return null;
 	}
 
@@ -228,15 +236,5 @@ public class Entity {
 	public Vector<Vector<Integer>> getStreetAreas() {
 		// TODO EngineSimulation
 		return null;
-	}
-
-
-	/**
-	 * 
-	 * @return - list of this entity network interfaces
-	 */
-	public List<NetworkInterface> getNetworkInterfaces() {
-		// TODO Auto-generated method stub
-		return this.netInterfaces;
 	}
 }

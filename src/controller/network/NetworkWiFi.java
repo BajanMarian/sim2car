@@ -22,7 +22,6 @@ public class NetworkWiFi extends NetworkInterface {
     @Parameter(names = {"--maxWifiRange"}, description = "The maximum range of the WiFi interface.")
     public static int maxWifiRange = 10000000;
 
-
 	public NetworkWiFi(Entity owner) {
 		super(NetworkType.Net_WiFi);
 		setOwner(owner);
@@ -101,6 +100,8 @@ public class NetworkWiFi extends NetworkInterface {
 	
 	public List<NetworkInterface> discoverClosestsTrafficLightMasters() {
 		Entity owner = getOwner();
+		//!!! At this moment this mtl will contain all TrafficLights Master in the engine (see owner.getMasterTrafficLights impl)
+		// TODO maybe another call should me made here
 		ArrayList<GeoTrafficLightMaster> mtl = (ArrayList<GeoTrafficLightMaster>) owner.getMasterTrafficLights();
 		
 		GeoTrafficLightMaster mtlInRange1 = mtl.get(0);

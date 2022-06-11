@@ -51,7 +51,7 @@ public abstract class NetworkInterface {
 	}
 
 	/**
-	 * Enqueue message to outputQueue
+	 * Enqueue message to outputQueue for sending to its destination entity
 	 * @param message	message object placed to be sent; it will be serialized when we will send it.
 	 *                  This gives the liberty to look at the message header without serializing it again
 	 */
