@@ -30,7 +30,11 @@ import model.parameters.Globals;
  *
  */
 public class GeoTrafficLightMaster extends Entity{
-	
+
+	private long sumWaitingTime = 0;
+	private long sumQueueLength = 0;
+	private long noWaits = 0;
+
 	/** Reference to mobility */
 	private MobilityEngine mobility;
 
@@ -42,22 +46,10 @@ public class GeoTrafficLightMaster extends Entity{
 	
 	/** traffic light nodes for entities */
 	private List<Node> nodes = new ArrayList<Node>();
-	
-	private long sumWaitingTime = 0;
-	private long sumQueueLenth = 0;
-	private long noWaits = 0;
-	
-	public List<Node> getNodes() {
-		return nodes;
-	}
-
-	public void addNode(Node n) {
-		this.nodes.add(n);
-	}
 
 	/** Number of cars waiting for green for each direction
-	 *  Waiting time for the first car
-	 * key - (way id, direction)  value - (firstCarWaitingTime, noCarsWaiting)*/
+	 * Waiting time for the first car
+	 * key - (way_id, direction)  value - (firstCarWaitingTime, noCarsWaiting)*/
 	private TreeMap<Pair<Long, Integer>, Pair<Long, Integer>> waitingQueue;
 	
 	/** Maximum number of cars waiting for green */
@@ -84,6 +76,14 @@ public class GeoTrafficLightMaster extends Entity{
 	/** intersection type */
 	private int intersectionType = 3;
 
+	public List<Node> getNodes() {
+		return nodes;
+	}
+
+	public void addNode(Node n) {
+		this.nodes.add(n);
+	}
+
 	public GeoTrafficLightMaster(long id, Node node, int intersectionType) {
 		super(id);
 		this.node = node;
@@ -96,7 +96,7 @@ public class GeoTrafficLightMaster extends Entity{
 //		System.out.println("collecting data: " + stopTime + " " + noCarsWaiting);
 		/* Waiting queue statistics */
 		sumWaitingTime += (SimulationEngine.getInstance().getSimulationTime() - stopTime);
-		sumQueueLenth += noCarsWaiting;
+		sumQueueLength += noCarsWaiting;
 		noWaits++;
 	}
 	
@@ -390,7 +390,7 @@ public class GeoTrafficLightMaster extends Entity{
 			return;
 		
 		double avg_waitingTime = sumWaitingTime / noWaits;
-		double avg_queueLength = sumQueueLenth / noWaits;
+		double avg_queueLength = sumQueueLength / noWaits;
 		ApplicationTrafficLightControl.saveData(this.getId(), avg_waitingTime, avg_queueLength);
 	}
 

@@ -314,8 +314,8 @@ public class GeoCar extends Entity {
 	}
 
 	/***
-	 * Sends a message via WiFi to the master trafic light in front to notify it
-	 * about it's presence. The master traffic light will put the car to the
+	 * Sends a message via Wi-Fi to the master traffic light in front to notify it
+	 * about its presence. The master traffic light will put the car to the
 	 * corresponding waiting queue.
 	 * 
 	 * @param trafficLightMaster

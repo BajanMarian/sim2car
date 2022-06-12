@@ -6,7 +6,7 @@ import application.Application;
 
 
 /**
- * A WiFi Access Point having also a server role.
+ * A Wi-Fi Access Point having also a server role.
  */
 public class GeoServer extends Entity {
 	

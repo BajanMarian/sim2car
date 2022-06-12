@@ -154,9 +154,7 @@ public class NetworkWiFi extends NetworkInterface {
 
 		return ret;
 	}
-	
-	
-	
+
 	/* Discover the closest 3 traffic light masters */
 	public NetworkInterface discoverClosestTrafficLightMaster() {
 		Entity owner = getOwner();

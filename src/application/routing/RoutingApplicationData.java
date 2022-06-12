@@ -6,7 +6,7 @@ import model.MapPoint;
 import utils.Pair;
 
 /**
- * This class is used to represent the routing app data which is send from the car to the server
+ * This class is used to represent the routing app data which is sent from the car to the server
  * @author Alex
  *
  */
