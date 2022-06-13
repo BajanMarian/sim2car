@@ -10,6 +10,7 @@ Note that there are several application which needs activation depending on your
 - TILES
 - STREET_VISITS
 - TRAFFIC_LIGHT_CONTROL
+- SYNCHRONIZE_INTERSECTIONS
 
 In order to activate them you should go **Global.java** and set  *activeApps field*.
 **ApplicationUtils.java** parses the activeApps, but when it comes about their activation is used distinct methods such as:

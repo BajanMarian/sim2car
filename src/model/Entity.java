@@ -46,7 +46,6 @@ public class Entity {
 		this.applications = new LinkedList<Application>();
 		this.netInterfaces = new LinkedList<NetworkInterface>();
 		this.logger = Logger.getLogger(Entity.class.getName());
-		this.logger.addHandler(new ConsoleHandler());
 	}
 
 	public void setId(long id) {

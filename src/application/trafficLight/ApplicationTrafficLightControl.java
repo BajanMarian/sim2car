@@ -52,12 +52,14 @@ public class ApplicationTrafficLightControl extends Application {
 
 	@Override
 	public String run() {
-		String logs = "";
-
 		NetworkInterface net = trafficLightMaster.getNetworkInterface(NetworkType.Net_WiFi);
 		net.processOutputQueue();
-		
-		return logs;
+		return "";
+	}
+
+	@Override
+	public String stop() {
+		return null;
 	}
 
 	@Override
@@ -81,41 +83,44 @@ public class ApplicationTrafficLightControl extends Application {
 	@Override
 	public void process(Message m) {
 
-		if( m.getType() == MessageType.ADD_WAITING_QUEUE )
-		{
+		if (m.getType() == MessageType.ADD_WAITING_QUEUE) {
 			ApplicationTrafficLightControlData data = (ApplicationTrafficLightControlData)m.getPayload();
-			 if( data != null )
-			 {
-					 trafficLightMaster.addCarToQueue(data);
-			 }
+			if( data != null ) {
+				trafficLightMaster.addCarToQueue(data);
+			}
 		}
-	}
-
-	@Override
-	public String stop() {
-		return null;
 	}
 	
 	public static void writeWaitingTimeStatistics() {
 		PrintWriter writer = null;
 		try {
-			if (Globals.useDynamicTrafficLights)
-				writer = new PrintWriter(GenericParams.mapConfig.getCity() + "_waitingTime&QueueLength_withDynamicTrafficLights.txt", "UTF-8");
-			else if (Globals.useTrafficLights)
-				writer = new PrintWriter(GenericParams.mapConfig.getCity() + "_waitingTime&QueueLength_withTrafficLights.txt", "UTF-8");
 
-			writer.println("trafficLightMasterId avg_waiting_time[sec] avg_queue_length");
-			for( Map.Entry<Long, String> entry : queuesStatistics.entrySet() )
-			{
-				writer.println(entry.getKey() +" "+entry.getValue());	
+			String fileSpecifier = null;
+
+			if (Globals.useDynamicTrafficLights) {
+				fileSpecifier = "_waitingTime&QueueLength_withDynamicTrafficLights.txt";
+			} else if (Globals.useTrafficLights) {
+				fileSpecifier = "_waitingTime&QueueLength_withTrafficLights.txt";
 			}
+
+			if(fileSpecifier != null) {
+				writer = new PrintWriter(GenericParams.mapConfig.getCity() + fileSpecifier, "UTF-8");
+			} else {
+				throw new Exception("Could not write statistics about waiting time in ApplicationTrafficLightControl");
+			}
+
+			final String resultsExplanation = "trafficLightMasterId avg_waiting_time[sec] avg_queue_length";
+			writer.println(resultsExplanation);
+
+			for (Map.Entry<Long, String> entry : queuesStatistics.entrySet()) {
+				writer.println(entry.getKey() + "	" +entry.getValue());
+			}
+
 			writer.close();
 
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		} catch (UnsupportedEncodingException e1) {
-			e1.printStackTrace();
-		}		
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static void stopGlobalApplicationActions(){
@@ -123,6 +128,6 @@ public class ApplicationTrafficLightControl extends Application {
 	}
 	
 	public static void saveData(long trafficLightId, double avg_waitingTime, double avg_queueLength) {
-		queuesStatistics.put(trafficLightId, avg_waitingTime + " " + avg_queueLength);
+		queuesStatistics.put(trafficLightId, avg_waitingTime + "	" + avg_queueLength);
 	}
 }
