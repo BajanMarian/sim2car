@@ -3,18 +3,19 @@ package model.OSMgraph;
 import java.io.Serializable;
 
 /**
- * Node is a node from a OSM file.
+ * <Node> is used to represent a node from OSM file.
+ * Besides its id, wayId and coordinates, there is a check for existence of a
+ * trafficLight inside it. The trafficLight id is also stored.
  */
 public class Node implements Comparable<Node>, Serializable {
 
 	private static final long serialVersionUID = -3397967186656052290L;
-	/** The ID of the node */
-	public long id, wayId;
-	
-	private Long trafficLightControl = null;
 
-	/* The GPS coordinates of a node */
+	public long id, wayId;
 	public double lat, lon;
+
+	/* trafficLight id */
+	private Long trafficLightControl = null;
 
 	public Node(long id, double lat, double lon) {
 		this(id, lat, lon, 0);
@@ -35,18 +36,21 @@ public class Node implements Comparable<Node>, Serializable {
 		return wayId;
 	}
 	
-	  @Override
-	    public boolean equals(Object obj) {
-	       if (!(obj instanceof Node))
-	            return false;
-	        if (obj == this)
-	            return true;
+ 	@Override
+	public boolean equals(Object obj) {
 
-	        Node nd = (Node) obj;
-	        
-	        return ( nd.id == this.id );
+	   if (!(obj instanceof Node)) {
+		   return false;
+	   }
 
-	    }
+	   if (obj == this) {
+		   return true;
+	   }
+
+	   Node node = (Node) obj;
+	   return (node.id == this.id);
+
+	}
 	
 	@Override
 	public String toString() {

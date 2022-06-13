@@ -4,6 +4,7 @@ package model.OSMgraph;
  * A cell in the array of points near a Way
  */
 public class Cell {
+
 	public final long cellNr;
 	public final long trafficEntityId;
 	

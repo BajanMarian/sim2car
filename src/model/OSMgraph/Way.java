@@ -18,11 +18,10 @@ import utils.Triplet;
 import utils.tracestool.Utils;
 import utils.tracestool.traces.TraceNode;
 
-
 /**
- * Class to represent a street.
- * It is comprised of queues for each way of the road.
- * And each queue has cells in which one car may be!
+ * <Way> is used to represent a street.
+ * It comprises queues for each way of the road.
+ * Each queue has cells in which one car may be!
  */
 public class Way {
 
@@ -36,8 +35,7 @@ public class Way {
 	public TreeMap<Long, Vector<Long>> neighs;
 	
 	/** Triplet<Long entityId, int segmentNr, Long cellNr> */
-	private List<Triplet<Long, Integer, Long>> nextMoveQueue =
-			new LinkedList<Triplet<Long, Integer, Long>>();
+	private List<Triplet<Long, Integer, Long>> nextMoveQueue = new LinkedList<>();
 
 	/**
 	 * Street is represented as a queue. For each segment we have a queue. 
@@ -74,7 +72,7 @@ public class Way {
 		max_long = -360;
 	}
 
-	/** It is oneway or not */
+	/** It is one-way or not */
 	public void setDirection(boolean val) {
 		oneway = val;
 	}
@@ -109,7 +107,8 @@ public class Way {
 		this.visits = visits;
 	}
 
-	/* TODO : Rediscover the goal of this function */
+	/* TODO : Rediscover the goal of this function
+	*   Answer: Due to its simplicity, this function is used in unitTests */
 	/** Add virtual Node composing the street */
 	public void addVirtualNode(Node nd) {
 		int i;
@@ -126,22 +125,22 @@ public class Way {
 	public void addNode(Node nd) {
 		/* update data for the bounding rectangle */
 		if (nd == null) {
-			System.out.println("eroare null ptr");
+			System.err.println("eroare null ptr");
 		}
 
 		double crt_lon = (double)nd.lon;
 		double crt_lat = (double)nd.lat;
 
-		if (min_lat - crt_lat >= 0) {
+		if (min_lat > crt_lat) {
 			min_lat = crt_lat;
 		}
-		if (max_lat - crt_lat <= 0) {
+		if (max_lat < crt_lat) {
 			max_lat = crt_lat;
 		}
-		if (min_long - crt_lon >= 0) {
+		if (min_long > crt_lon) {
 			min_long = crt_lon;
 		}
-		if (max_long - crt_lon <= 0) {
+		if (max_long < crt_lon) {
 			max_long = crt_lon;
 		}
 
@@ -151,14 +150,15 @@ public class Way {
 				break;
 			}
 		}
+		// check if it is and older node or a new one
 		if (i < nodes.size()) {
 			nodes.set(i, nd);
 		} else {
 			nodes.add(nd);
 		}
 		
-		/* If the street has more than one node we can define a queue. For each new node
-		 * added there are add a new segment. */
+		/* If the street has more than one node we can define a queue.
+		 * For each new node added there is added a new segment. */
 		if (nodes.size() > 1) {
 			
 			/* direct direction */
@@ -171,7 +171,8 @@ public class Way {
 			}));
 			
 			/* TODO This maybe should be valid also for oneway street, because it can be analyzed as 
-			 * a street with directions. */
+			 * 			a street with directions.
+			 */
 
 			/* reverse direction */
 			if(!oneway){
@@ -198,8 +199,8 @@ public class Way {
 
 	/**
 	 * Return the index of a node
-	 * @param id - the node's id
-	 * @return the node's index
+	 * @param 	id - the node's id
+	 * @return	the node's index
 	 */
 	public int getNodeIndex(long id) {
 		for (Node node : nodes) {
@@ -214,10 +215,12 @@ public class Way {
 		return nodes.elementAt(index);
 	}
 
+	/* TODO !!! too long and duplicated code; should be refactored
 	/* Returns the intermediary nodes between 2 points of a street */
 	public Vector<Node> getNodesFromA2B(Object A, Object B) {
 		double lat_min = -361, lat_max = -361, lon_min = -361, lon_max = -361;
 		Vector<Node> AB = new Vector<Node>();
+
 		if (A instanceof Node && B instanceof Node) {
 			Node A1 = (Node) A;
 			Node B1 = (Node) B;
@@ -244,44 +247,18 @@ public class Way {
 			lon_min = (Double)A1.getX() - (Double)B1.getX() <= 0 ? (Double)A1.getX() : (Double)B1.getX();
 			lon_max = (Double)A1.getX() - (Double)B1.getX() > 0 ? (Double)A1.getX() : (Double)B1.getX();
 		}
+
+		// this one check it's enough
 		if (lat_min == -361)
 			return AB;
-		for (int i = 0; i < nodes.size(); i++) {
-			Node nd = nodes.get(i);
-			if (lat_min <= nd.lat && nd.lat <= lat_max && lon_min <= nd.lon
-					&& nd.lon <= lon_max) {
+
+		for (Node nd: nodes) {
+			if (lat_min <= nd.lat && nd.lat <= lat_max && lon_min <= nd.lon && nd.lon <= lon_max) {
 				AB.add(nd);
 			}
 		}
-		return AB;
-	}
-	
-	public List<PeanoKey> buildPeanoKeys(SphericalMercator sm) {
-		List<PeanoKey> peanoKeys = new ArrayList<PeanoKey>();
-		peanoKeys.add(new PeanoKey(nodes.get(0).lat, nodes.get(0).lon, id));
-		for (int i = 1; i < nodes.size(); i++) {
-			Node prev = nodes.get(i - 1);
-			Node curr = nodes.get(i);
-			double dist = sm.distance(prev.lat, prev.lon, curr.lat, curr.lon);
-			if (dist > Globals.maxCellLen) {
-				int count = (int) (dist / Globals.maxCellLen);
-				double delta_lat = (curr.lat - prev.lat) / (count + 1);
-				double delta_lon = (curr.lon - prev.lon) / (count + 1);
-				double lat = prev.lat + delta_lat;
-				double lon = prev.lon + delta_lon;
-				
-				/* Add all intermediate points */
-				for (int j = 0; j < count; j++) {
-					peanoKeys.add(new PeanoKey(lat, lon, id));
-					lat += delta_lat;
-					lon += delta_lon;
-				}
-			}
 
-			/* Add final point of the road segment */
-			peanoKeys.add(new PeanoKey(curr.lat, curr.lon, id));
-		}
-		return peanoKeys;
+		return AB;
 	}
 
 	/* Returns a vector with all the neighbors IDs */
@@ -295,48 +272,62 @@ public class Way {
 
 	/* Returns a vector with all the outbound neighbors IDs */
 	public Vector<Long> getAllOutNeighbors( TreeMap<Long,Way> graph ) {
-		Vector<Long> neigh = new Vector<Long>();
+
+		Vector<Long> neigh = new Vector<>();
+
 		for (Iterator<Map.Entry<Long,Vector<Long>>> it = neighs.entrySet().iterator(); it.hasNext();) {
+
 			Map.Entry<Long, Vector<Long>> aux = it.next();
 			/* iterate over each street neighbors to use only the one that are out links */
-			for( Long wayId : aux.getValue() )
-			{
+			for( Long wayId : aux.getValue() ) {
+
 				Way neighWay = graph.get(wayId);
-				if(neighWay.enclosed)
+
+				if(neighWay.enclosed) {
 					neigh.add(wayId);
-				else
-				{
-					if( !neighWay.oneway )
+				} else {
+					// two-way street = automatically outgoing link
+					if( !neighWay.oneway ) {
 						neigh.add(wayId);
-					else
-					{
+					} else {
+
 						int idx = neighWay.getNodeIndex(aux.getKey());
 						if( idx == -1 )
 							continue;
-						/* if this node is not the last from neighWay => this street can be considered a
+						/* if this node is not the last from neighWay => this street can be considered an
 						 * outgoing links, because it has another a part of street on which can continue 
 						 * the way.
 						 */
+						// if it was the last node, it will be an incoming way
 						if( idx < neighWay.nodes.size() - 1)
 							neigh.add(wayId);
 					}
 				}
 			}
 		}
+
 		return neigh;
 	}
 
-	/* Returns a vector with all the outbound neighbors IDs grup by intersectioniD */
+	/**
+	 * Get all neighbours existing from this node, alongside with their junction node
+	 * 	with this Way.
+	 * @returns	 Vector of Pairs < IntersectionID, StreetID >
+	 */
 	public Vector<Pair<Long,Long>> getAllOutNeighborsWithJoints( TreeMap<Long,Way> graph ) {
-		Vector<Pair<Long,Long>> neigh = new Vector<Pair<Long,Long>>();
+
+		Vector<Pair<Long,Long>> neigh = new Vector<>();
+
 		for (Iterator<Map.Entry<Long,Vector<Long>>> it = neighs.entrySet().iterator(); it.hasNext();) {
+
 			Map.Entry<Long, Vector<Long>> aux = it.next();
 			long crtStreetIdx = this.getNodeIndex(aux.getKey());
-			if( this.oneway )
-			{
+
+			if (this.oneway) {
 				if( crtStreetIdx == 0 )
 					continue;
 			}
+
 			/* iterate over each street neighbors to use only the one that are out links */
 			for( Long wayId : aux.getValue() )
 			{
@@ -365,74 +356,76 @@ public class Way {
 		return neigh;
 	}
 
-	/* Returns a vector with all the inbound neighbors IDs */
+	/* Returns a vector with all the inbound neighbors IDs
+	*  The function logic is similar with getAllOutNeighbors()
+	* */
 	public Vector<Long> getAllInNeighbors( TreeMap<Long,Way> graph ) {
+
 		Vector<Long> neigh = new Vector<Long>();
+
 		for (Iterator<Map.Entry<Long,Vector<Long>>> it = neighs.entrySet().iterator(); it.hasNext();) {
+
 			Map.Entry<Long, Vector<Long>> aux = it.next();
 			long crtStreetIdx = this.getNodeIndex(aux.getKey());
-			if( this.oneway )
-			{
-				if( crtStreetIdx == this.nodes.size() -1 )
+
+			if (this.oneway) {
+				if (crtStreetIdx == this.nodes.size() -1)
 					continue;
 			}
 			/* iterate over each street neighbors to use only the one that are out links */
-			for( Long wayId : aux.getValue() )
-			{
+			for (Long wayId : aux.getValue()) {
 
 				Way neighWay = graph.get(wayId);
-				if(neighWay.enclosed)
-				{
+				if(neighWay.enclosed) {
 					neigh.add(wayId);
-				}
-				else
-				{
-					if( !neighWay.oneway )
-					{
+				} else {
+
+					if (!neighWay.oneway) {
 						neigh.add(wayId);
-					}
-					else
-					{
+					} else {
+
 						int idx = neighWay.getNodeIndex(aux.getKey());
-						if( idx == -1 )
+						if (idx == -1)
 							continue;
 						/* if this node is one of the neighWay nodes => this street can be considered a
 						 * incoming links, because it has another a part of street on which can continue 
 						 * the way.
 						 */
-						if( idx > 0 )
+						if (idx > 0) {
 							neigh.add(wayId);
+						}
 					}
 				}
 			}
 		}
+
 		return neigh;
 	}
 
 	/**
-	 * Returns the closest node on the street
+	 * Given the coordinates, returns the closest node found in this street
+	 * @param	lat latitude
+	 * @param 	lon longitude
+	 * @returns the closest node on the street
 	 */
-	public Node getClosestNode( double lat, double lon) {
+	public Node getClosestNode(double lat, double lon) {
+
 		double dist = Double.MAX_VALUE;
 		int poz = -1;
 
-		for( int i = 0; i < nodes.size(); i++)
-		{
+		for (int i = 0; i < nodes.size(); i++) {
+
 			Node crtNd = nodes.get(i);
-			double aux_dist = Utils.distance( lat, lon, crtNd.lat, crtNd.lon );
-			if( aux_dist < dist )
-			{
+			double aux_dist = Utils.distance(lat, lon, crtNd.lat, crtNd.lon);
+			if (aux_dist < dist) {
 				dist = aux_dist;
 				poz = i;
 			}
 		}
 
-		if( poz == -1 )
-		{
+		if(poz == -1) {
 			return null;
-		}
-		else
-		{
+		} else {
 			return nodes.get(poz);
 		} 
 
@@ -490,5 +483,33 @@ public class Way {
 				break;
 			}
 		}
+	}
+
+	public List<PeanoKey> buildPeanoKeys(SphericalMercator sm) {
+		List<PeanoKey> peanoKeys = new ArrayList<PeanoKey>();
+		peanoKeys.add(new PeanoKey(nodes.get(0).lat, nodes.get(0).lon, id));
+		for (int i = 1; i < nodes.size(); i++) {
+			Node prev = nodes.get(i - 1);
+			Node curr = nodes.get(i);
+			double dist = sm.distance(prev.lat, prev.lon, curr.lat, curr.lon);
+			if (dist > Globals.maxCellLen) {
+				int count = (int) (dist / Globals.maxCellLen);
+				double delta_lat = (curr.lat - prev.lat) / (count + 1);
+				double delta_lon = (curr.lon - prev.lon) / (count + 1);
+				double lat = prev.lat + delta_lat;
+				double lon = prev.lon + delta_lon;
+
+				/* Add all intermediate points */
+				for (int j = 0; j < count; j++) {
+					peanoKeys.add(new PeanoKey(lat, lon, id));
+					lat += delta_lat;
+					lon += delta_lon;
+				}
+			}
+
+			/* Add final point of the road segment */
+			peanoKeys.add(new PeanoKey(curr.lat, curr.lon, id));
+		}
+		return peanoKeys;
 	}
 }
