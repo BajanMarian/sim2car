@@ -22,16 +22,25 @@ import org.openstreetmap.gui.jmapviewer.JMapViewer;
 
 import controller.newengine.EngineUtils;
 
+/**
+ * res/ folder was used in a previous version of simulator
+ * @Deprecated
+ */
 public class TestGeoCar {
 	
 	public static void main(String[] args) {
 		Main.args = args;
 		
 		Globals.setUp(args);
-		
+
 		TreeMap<Long, Way> graph = EngineUtils.loadGraph(
 				"res\\Xml\\streets_rez_san-francisco.osm",
 				"res\\Xml\\streets_graph_san-francisco.osm");
+
+		/* try with this still is a problem with cars logic
+		TreeMap<Long, Way> graph = EngineUtils.loadGraph(
+				"processeddata\\maps\\XmlRome\\streets_rez_rome.osm",
+				"processeddata\\maps\\XmlRome\\streets_graph_rome.osm");*/
 		
 		MapConfig mapConfig = MapConfiguration.getInstance(Globals.propertiesFile);
 		Globals.zoomLevel += mapConfig.getQuot();

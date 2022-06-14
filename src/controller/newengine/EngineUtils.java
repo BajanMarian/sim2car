@@ -251,10 +251,10 @@ public final class EngineUtils {
 		/* Add other servers to the map */
 		computeServersPositions(serversList, servers);
 		viewer.addServers(serversList);
-		System.out.println("===== Number of server: " + servers.size() + " =====");
 		/* Compute the neighbor servers of each server */
 		computeServerNeighbors(servers);
 
+		System.out.println("===== Number of servers: " + servers.size() + " =====");
 		return servers;
 	}
 	
@@ -356,8 +356,8 @@ public final class EngineUtils {
 			logger.log(Level.SEVERE, "Failed to activate application with type " + type +
 					" for the new added traffic light master");
 		} else {
-//			 logger.info("Succeeded to active application with type " + type + "" +
-//					" for the new added traffic light master");
+			/*logger.info("Succeeded to active application with type " + type + "" +
+					" for the new added traffic light master");*/
 			master.addApplication(app);
 		}
 		
@@ -389,22 +389,35 @@ public final class EngineUtils {
 			fstream = new FileInputStream(file);
 			BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
-			//Format:
-			//		  master id idNode wayidNode latNote lonNode
-			// 		  wayId direction lat lon segmentIndex cellIndex color
-			
+			/* Format of a trafficLight file (e.g. trafficLights_rome.txt):
+			 		1.master TrafficLightMasterId NodeId wayId latNode lonNode
+			 		2.Nodes NodeId1 wayId2 NodeId2 wayId2 NodeId3 wayId3 .....
+			 		3.wayId direction lat lon segmentIndex cellIndex color
+			 	3 - each raw represents a trafficLightView(also referred as a slave)
+			 	wayId = streetId;
+			 	In general: Node = a small part from a street. Here a node is regarded as an intersection (a joint),
+			 		thus a Node can have multiple wayIDs because there are many streets which have this "node" in
+			 		its composition.
+			 */
+
 			/* Read data about traffic lights */
+			int groupsReadSoFar = 0;
 			GeoTrafficLightMaster master = null;
+
 			String line;
 			while ((line = br.readLine()) != null) {
-				
+
 				StringTokenizer st = new StringTokenizer(line, " ", false);
 				String keyword = st.nextToken(); 					/* master keyword */
 				if (keyword.equals("master")) {
-					
+
 					if (master != null) {
 						trafficLights.put(master.getId(), master);
 						viewer.addTrafficLightMaster(master);
+					}
+
+					if(++groupsReadSoFar > Globals.maxNoTrafficLight) {
+						break;
 					}
 					
 					// traffic light master line
@@ -446,9 +459,9 @@ public final class EngineUtils {
 					MapPoint currentPoint = MapPoint.getMapPoint(lat, lon, 1, wayId);
 					currentPoint.segmentIndex = seg;
 					currentPoint.cellIndex = cell;
-					TrafficLightView view = new TrafficLightView(viewer.getMapJ(), currentPoint, wayId, direction);
+					TrafficLightView view = new TrafficLightView(viewer.getMapJ(), currentPoint, wayId, direction, count);
 					view.setColor(color);
-					viewer.addMapMarker(currentPoint.lat, currentPoint.lon, view.getColor());
+					viewer.addMapMarker(currentPoint.lat, currentPoint.lon, view.getColor(), String.valueOf(count));
 					master.addTrafficLightView(view);
 				}
 			}
@@ -462,7 +475,7 @@ public final class EngineUtils {
 				ex.printStackTrace();
 			}
 		}
-		System.out.println(trafficLights.size());
+		System.out.println("===== Number of trafficLightsMasters: " + trafficLights.size() + " =====");
 		return trafficLights;
 	}
 	

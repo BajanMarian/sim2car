@@ -40,7 +40,7 @@ public class Viewer {
 	/**
 	 * The master traffic lights
 	 */
-	private TreeMap<Long, GeoTrafficLightMaster> trafficLightMasterList = new TreeMap<Long, GeoTrafficLightMaster>();	
+	private TreeMap<Long, GeoTrafficLightMaster> trafficLightMasterList = new TreeMap<Long, GeoTrafficLightMaster>();
 	
 	public Viewer(final MapConfig mapConfig) {
 		if (Globals.showGUI) {
@@ -57,7 +57,8 @@ public class Viewer {
 	}
 
 	public void addCar(GeoCar car) {
-		//if (Globals.showGUI && car.getId() == 148) {
+
+		//if (Globals.showGUI && car.getId() == 28) {
 			CarView carView = new CarView(car.getId(), mapJ, car);
 			carView.setColor(new Color( (float) Math.random(),
 										(float) Math.random(),
@@ -158,18 +159,30 @@ public class Viewer {
 		}
 		
 	}
-	
-	/***
-	 * Adds a map marker to the map
-	 * @param lat
-	 * @param lon
-	 * @param color
+
+	/**
+	 * Color and add marker to a JMapViewer.
+	 * This function was created to not duplicate the code for overloaded method addMapMarker().
+	 * @param	marker named or unnamed marker
+	 * @param	color marker's color
 	 */
+	public void attachMapMarker(MapMarkerDot marker, Color color) {
+		marker.setBackColor(color);
+		marker.setColor(color);
+		mapJ.addMapMarker(marker);
+	}
+
 	public void addMapMarker(double lat, double lon, Color color) {
 		MapMarkerDot lastMk = new MapMarkerDot(lat, lon);
-		lastMk.setBackColor(color);
-		lastMk.setColor(color);
-		mapJ.addMapMarker(lastMk);
+		attachMapMarker(lastMk, color);
+	}
+
+	public void addMapMarker(double lat, double lon, Color color, String name) {
+		MapMarkerDot lastMk = new MapMarkerDot(lat, lon);
+		if (Globals.displayTrafficLightsIds) {
+			lastMk.setName(name);
+		}
+		attachMapMarker(lastMk, color);
 	}
 
 	/***

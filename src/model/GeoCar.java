@@ -515,7 +515,7 @@ public class GeoCar extends Entity {
 					return;
 			}
 			if (this.getCurrentPos() == null) {
-				// System.out.println("begin new route");
+				//System.out.println("Car with id " + this.getId() + " begin new route");
 				setBeginNewRoute(true);
 				initRoute();
 				return;

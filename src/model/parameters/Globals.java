@@ -86,16 +86,25 @@ public class Globals {
     public static double maxCellLen = 3.0;
 	
 	@Parameter(names = {"--threadPoolLogging"}, description = "Enable or disable thread pool logging")
-    public static boolean threadPoolLogging = false;
+    public static boolean threadPoolLogging = true;
 	 
 	@Parameter(names = {"--useTreadPool"}, description = "If true, use the treadpool")
 	public static boolean useTreadPool = true;
 	
 	@Parameter(names = {"--useTrafficLights"}, description = "If true, use traffic lights")
-	public static boolean useTrafficLights = true;
+	public static boolean useTrafficLights = false;
 	
 	@Parameter(names = {"--useDynamicTrafficLights"}, description = "If true, use traffic lights")
 	public static boolean useDynamicTrafficLights = true;
+
+	@Parameter(names = {"--maxNoTrafficLight"}, description = "Maximum number of trafficLightsMasters read from their file")
+	public static int maxNoTrafficLight = 500;
+
+	@Parameter(names = {"--displayTrafficLightsIds"}, description = "Display traffic lights' group id")
+	public static boolean displayTrafficLightsIds = false;
+
+	@Parameter(names = {"--displayCarsIds"}, description = "Display ids of cars in order to track their routes")
+	public static boolean displayCarsIds = false;
 	
 	@Parameter(names = {"--carIdFuelStatistics"}, description = "The car id used to retrieve fuel consumption statistics.")
     public static long carIdFuelStatistics = 10;
@@ -139,7 +148,7 @@ public class Globals {
 	@Parameter(names = {"--activeApps"}, description = "the accepted values ROUTING,TILES,STREET_VISITS,TRAFFIC_LIGHT_CONTROL."
 													 + "Please see ApplicationType for more details\n."
 													 + "Multiple applications can be passed using --activeApps=app1,app2,app3,..,appn")
-	public static String activeApps = "ROUTING,SYNCHRONIZE_INTERSECTIONS";
+	public static String activeApps = "ROUTING,TRAFFIC_LIGHT_CONTROL,SYNCHRONIZE_INTERSECTIONS";
 	/* The default application is ROUTING_APP */
 	public static Vector<ApplicationType> activeApplications;
 

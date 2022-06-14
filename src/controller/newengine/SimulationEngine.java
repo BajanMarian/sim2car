@@ -108,6 +108,8 @@ public class SimulationEngine implements EngineInterface {
 			entities.putAll(EngineUtils.getTrafficLights(getMapConfig().getTrafficLightsFilename(),
 					getMapConfig().getTrafficLightsLoaded(), viewer, mobilityEngine));
 		}
+
+		System.out.println("Read data for all entities! Their id are in this range: [0, " + (EngineUtils.count - 1) + "]!");
 		
 		if (Globals.activeApplications.contains(ApplicationType.ROUTING_APP)) {
 			for (Entity e : entities.values()) {

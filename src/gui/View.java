@@ -87,7 +87,7 @@ public class View extends JFrame {
 				GeoTrafficLightMaster mtl = EngineUtils.discoverClosestTrafficLightMaster(node.lat, node.lon);
 				
 				System.out.println("Neights " + MobilityEngine.getInstance().streetsGraph.get(mtl.getNode().wayId).neighs.get(mtl.getNode().id).size());
-				System.out.println(node + " One way" + MobilityEngine.getInstance().streetsGraph.get(node.wayId).getDirection());
+				System.out.println(node + " One way " + MobilityEngine.getInstance().streetsGraph.get(node.wayId).getDirection());
 				System.out.println("master " + dist + " " + mtl.getId() + " " + mtl.getNode() + " | \n" + mtl.getTrafficLights().toString());
 			}
 			@Override

@@ -23,7 +23,7 @@ import com.beust.jcommander.Parameter;
 public class CarView {
 
 	@Parameter(names = {"--trackerLine"}, description = "Show line tracking car movements on the map.", arity = 1)
-	public static boolean trackerLine = false;
+	public static boolean trackerLine = true;
     
 	private Color carColor;
 	private GeoCar car;
@@ -133,6 +133,9 @@ public class CarView {
 						lastMk = new MapMarkerDot(currentPoint.lat, currentPoint.lon);
 						lastMk.setBackColor(carColor);
 						lastMk.setColor(carColor);
+						if (Globals.displayCarsIds) {
+							lastMk.setName(String.valueOf(car.getId()));
+						}
 						map.addMapMarker(lastMk);
 					}
 				}
