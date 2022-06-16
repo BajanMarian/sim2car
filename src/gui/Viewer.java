@@ -8,10 +8,7 @@ import java.util.Vector;
 
 import javax.swing.SwingUtilities;
 
-import model.GeoCar;
-import model.GeoServer;
-import model.GeoTrafficLightMaster;
-import model.MapPoint;
+import model.*;
 import model.OSMgraph.Node;
 import model.OSMgraph.Way;
 import model.mobility.MobilityEngine;
@@ -40,7 +37,7 @@ public class Viewer {
 	/**
 	 * The master traffic lights
 	 */
-	private TreeMap<Long, GeoTrafficLightMaster> trafficLightMasterList = new TreeMap<Long, GeoTrafficLightMaster>();
+	private TreeMap<Long, TrafficLightModel> trafficLightMasterList = new TreeMap<>();
 	
 	public Viewer(final MapConfig mapConfig) {
 		if (Globals.showGUI) {
@@ -75,7 +72,7 @@ public class Viewer {
 	}
 	
 	/** Creates a traffic light view on the map for the given node*/
-	public void createTrafficLightView(GeoTrafficLightMaster trafficLightMaster, Node node, Long wayId, Color color) {
+	public void createTrafficLightView(TrafficLightModel trafficLightMaster, Node node, Long wayId, Color color) {
 		TrafficLightView trafficLightView;
 		MobilityEngine mobilityEngine;
 		MapPoint newPoint;
@@ -86,7 +83,7 @@ public class Viewer {
 		int direction;
 		double distanceFromCenter, distanceBetweenNodes;
 		
-		if (trafficLightMaster.getId()== 893) {
+		if (trafficLightMaster.getId() == 893) {
 			System.out.println("here");
 		}
 		
@@ -206,10 +203,10 @@ public class Viewer {
 			
 			/* Check if the intersection has double traffic light control */
 			boolean doubleIntersection = false;
-			GeoTrafficLightMaster masterTrafficLightInitial = null;
+			TrafficLightModel masterTrafficLightInitial = null;
 			
 			/* Find if another traffic light is very close */
-			for (GeoTrafficLightMaster masterToCheck : trafficLightMasterList.values()) {
+			for (TrafficLightModel masterToCheck : trafficLightMasterList.values()) {
 				double distance = Utils.distance(masterToCheck.getNode().lat, masterToCheck.getNode().lon, 
 												currentNode.lat, currentNode.lon);
 				if (distance < 20) {
@@ -227,7 +224,7 @@ public class Viewer {
 				Vector<Long> currentWayNeighs = currentWay.neighs.get(currentNode.id);
 				if (currentWayNeighs != null) {
 					for (Long currentWayNeighId : currentWayNeighs) {
-						
+
 						if (!masterTrafficLightInitial.containsTrafficLightByWay(currentWayNeighId)) {
 							
 							/* Add a traffic light view for this neighbor way */
@@ -237,7 +234,8 @@ public class Viewer {
 							
 							/* Create a traffic light view for this neighbor way */
 							masterTrafficLightInitial.addNode(currentNode);
-							masterTrafficLightInitial.addNode(nodeNeigh);					
+							masterTrafficLightInitial.addNode(nodeNeigh);
+
 							createTrafficLightView(masterTrafficLightInitial, nodeNeigh, currentWayNeighId, trafficLightColor);
 						}
 					}
@@ -284,7 +282,7 @@ public class Viewer {
 	 * Adds the traffic light master to the viewer list
 	 * @param trafficLightMaster
 	 */
-	public void addTrafficLightMaster(GeoTrafficLightMaster trafficLightMaster) {
+	public void addTrafficLightMaster(TrafficLightModel trafficLightMaster) {
 		trafficLightMasterList.put(trafficLightMaster.getId(), trafficLightMaster);
 	}
 	
@@ -336,10 +334,16 @@ public class Viewer {
 	
 	public void updateTrafficLightsColors() {
 		if (Globals.showGUI) {
-			for (GeoTrafficLightMaster trafficLightMaster : trafficLightMasterList.values()) {
+			// !!! TODO needs solution at runtime, new methods implemented
+			for (TrafficLightModel trafficLightMaster : trafficLightMasterList.values()) {
 				long simulationTime = view.getTimer().equals("") ? 0 : Long.parseLong(view.getTimer());
-				if (trafficLightMaster.needsColorsUpdate(simulationTime))
-					trafficLightMaster.updateTrafficLightViews(simulationTime);
+				if (trafficLightMaster instanceof GeoTrafficLightMaster) {
+					if (((GeoTrafficLightMaster)trafficLightMaster).needsColorsUpdate(simulationTime))
+						((GeoTrafficLightMaster)trafficLightMaster).updateTrafficLightViews(simulationTime);
+				} else {
+					((SmartTrafficLight)trafficLightMaster).updateTrafficLightViews();
+				}
+
 			}
 			view.repaint();
 		}

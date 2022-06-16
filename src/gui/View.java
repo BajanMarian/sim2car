@@ -18,10 +18,7 @@ import javax.swing.JTextArea;
 import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
 
-import model.GeoCar;
-import model.GeoServer;
-import model.GeoTrafficLightMaster;
-import model.MapPoint;
+import model.*;
 import model.OSMgraph.Node;
 import model.OSMgraph.Way;
 import model.mobility.MobilityEngine;
@@ -39,7 +36,7 @@ public class View extends JFrame {
 	JPanel map;
 	ServerView serv;
 	List<CarView> carsView;
-	TreeMap<Long, GeoTrafficLightMaster> trafficLightView;
+	TreeMap<Long, TrafficLightModel> trafficLightView;
 
 	private JTextArea timer = new JTextArea();
 	private JTextArea comms = new JTextArea();
@@ -48,7 +45,7 @@ public class View extends JFrame {
 	ChartView cht;
 
 	public View(int N, int M, JMapViewer map, ServerView serv,
-			List<CarView> carsView, TreeMap<Long, GeoTrafficLightMaster> trafficLightView) {
+			List<CarView> carsView, TreeMap<Long, TrafficLightModel> trafficLightView) {
 		this.N = N;
 		this.M = M;
 		this.map = map;

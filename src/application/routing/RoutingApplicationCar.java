@@ -247,7 +247,7 @@ public class RoutingApplicationCar extends Application {
 							}
 				}
 
-				/* TODO: here the cost should be sent to server */
+				/* TODO !!! BREAKPOINT USE: here the cost should be sent to server */
 				TreeMap<Long,Double> virtualNodes = streetsCost.get(oldPos.wayId);
 				Double oldg = virtualNodes.get(crtPos.wayId);
 				if( oldg != null )

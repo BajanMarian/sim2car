@@ -35,13 +35,7 @@ import application.ApplicationType;
 import application.ApplicationUtils;
 import application.routing.RoutingApplicationParameters;
 import application.routing.RoutingApplicationServer;
-import model.GeoCar;
-import model.GeoCarRoute;
-import model.GeoServer;
-import model.GeoTrafficLightMaster;
-import model.MapPoint;
-import model.PeanoKey;
-import model.PixelLocation;
+import model.*;
 import model.OSMgraph.Node;
 import model.OSMgraph.Way;
 import model.mobility.MobilityEngine;
@@ -341,7 +335,7 @@ public final class EngineUtils {
 		// System.out.println("Counted servers when computeServersPositions(): " + servers.size());
 	}
 	
-	private static void addTrafficLightApps(GeoTrafficLightMaster master) {
+	private static void addTrafficLightApps(TrafficLightModel master) {
 		/* Create each network interface which is defined */
 		for( NetworkType type : Globals.activeNetInterfaces )
 		{
@@ -360,12 +354,13 @@ public final class EngineUtils {
 					" for the new added traffic light master");*/
 			master.addApplication(app);
 		}
-		
-		if (Globals.useDynamicTrafficLights) {
+
+		// !!! TODO Take Care with Globals.typeOfTrafficLight == 0
+		if (Globals.useDynamicTrafficLights && Globals.typeOfTrafficLight == 0) {
 
 			/* Create each application which is defined for traffic light */
 			type = ApplicationType.SYNCHRONIZE_INTERSECTIONS_APP;
-			app = ApplicationUtils.activateApplicationSynchronizeTrafficLight(type, master);
+			app = ApplicationUtils.activateApplicationSynchronizeTrafficLight(type, (GeoTrafficLightMaster) master);
 			if( app == null ) {
 				logger.info(" Failed to create application with type " + type);
 			} else {
@@ -379,11 +374,11 @@ public final class EngineUtils {
 	 * @param file
 	 * @return
 	 */
-	private static TreeMap<Long,GeoTrafficLightMaster> readExistingTrafficLights(
+	private static TreeMap<Long,TrafficLightModel> readExistingTrafficLights(
 			String file, Viewer viewer, MobilityEngine mobilityEngine) {
 		
 		FileInputStream fstream = null;
-		TreeMap<Long,GeoTrafficLightMaster> trafficLights = new TreeMap<Long,GeoTrafficLightMaster>();
+		TreeMap<Long, TrafficLightModel> trafficLights = new TreeMap<>();
 		
 		try {
 			fstream = new FileInputStream(file);
@@ -402,7 +397,7 @@ public final class EngineUtils {
 
 			/* Read data about traffic lights */
 			int groupsReadSoFar = 0;
-			GeoTrafficLightMaster master = null;
+			TrafficLightModel master = null;
 
 			String line;
 			while ((line = br.readLine()) != null) {
@@ -429,7 +424,11 @@ public final class EngineUtils {
 					
 					Node node = mobilityEngine.streetsGraph.get(wayId).getNode(nodeId);
 					node.setWayId(wayId);
-					master = new GeoTrafficLightMaster(masterId, node, 3);
+					if (Globals.typeOfTrafficLight == 0) {
+						master = new GeoTrafficLightMaster(masterId, node, 3);
+					} else {
+						master = new SmartTrafficLight(masterId, node);
+					}
 					MapPoint mapPoint = MapPoint.getMapPoint(node);
 					master.setCurrentPos(mapPoint);
 					
@@ -442,7 +441,10 @@ public final class EngineUtils {
 						Long nodeId = Long.parseLong(st.nextToken());
 						Long wayId = Long.parseLong(st.nextToken());
 						Node node = mobilityEngine.streetsGraph.get(wayId).getNode(nodeId);
-						master.addNode(node);
+						if (master instanceof GeoTrafficLightMaster) {
+							((GeoTrafficLightMaster) master).addNode(node);
+						}
+
 					}
 				}
 				else {
@@ -487,84 +489,85 @@ public final class EngineUtils {
 	 * @param mobilityEngine
 	 * @return
 	 */
-	private static TreeMap<Long,GeoTrafficLightMaster> readTrafficLights(
-			String inFile, String outFile, Viewer viewer, MobilityEngine mobilityEngine) {
-		
-		FileInputStream fstream = null;
-		TreeMap<Long,GeoTrafficLightMaster> trafficLights = new TreeMap<Long,GeoTrafficLightMaster>();
-		//if traffic lights were not loaded before, read them from the config
-		try {
-			fstream = new FileInputStream(inFile);
-			BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
-			String line;
+//	private static TreeMap<Long,GeoTrafficLightMaster> readTrafficLights(
+//			String inFile, String outFile, Viewer viewer, MobilityEngine mobilityEngine) {
+//
+//		FileInputStream fstream = null;
+//		TreeMap<Long,GeoTrafficLightMaster> trafficLights = new TreeMap<Long,GeoTrafficLightMaster>();
+//		//if traffic lights were not loaded before, read them from the config
+//		try {
+//			fstream = new FileInputStream(inFile);
+//			BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+//			String line;
+//
+//			/* read info data */
+//			br.readLine();
+//			/* Read data about traffic lights */
+//			while ((line = br.readLine()) != null) {
+//				logger.info(" We opened " + count + ". " + line);
+//
+//				StringTokenizer st = new StringTokenizer(line, " ", false);
+//				Long nodeId = Long.parseLong(st.nextToken()); /* node id */
+//				Long wayId = Long.parseLong(st.nextToken()); /* way id */
+//
+//				Node node = mobilityEngine.streetsGraph.get(wayId).getNode(nodeId);
+//				node.setWayId(wayId);
+//
+//				Way way = mobilityEngine.getWay(wayId);
+//				int noWaysNeigh = 0;
+//				if (way.neighs.containsKey(node.id)) {
+//					noWaysNeigh = way.neighs.get(node.id).size();
+//				}
+//				count++;
+//				GeoTrafficLightMaster trafficLight = new GeoTrafficLightMaster(count, node, noWaysNeigh);
+//
+//				MapPoint mapPoint = MapPoint.getMapPoint(node);
+//				mapPoint.segmentIndex = mobilityEngine.getSegmentNumber(node);
+//
+//				if (mapPoint.segmentIndex < mobilityEngine.getWay(wayId).nodes.size() - 1)
+//					mapPoint.cellIndex = mobilityEngine.getCellIndex(node, mobilityEngine.streetsGraph.get(wayId).getNodeByIndex(mapPoint.segmentIndex + 1), mapPoint);
+//				else {
+//					if (mapPoint.segmentIndex <= 0)
+//						mapPoint.segmentIndex = 1;
+//					mapPoint.cellIndex = mobilityEngine.getCellIndex(mobilityEngine.streetsGraph.get(wayId).getNodeByIndex(mapPoint.segmentIndex - 1), node, mapPoint);
+//				}
+//				trafficLight.setCurrentPos(mapPoint);
+//				trafficLights.put(trafficLight.getId(), trafficLight);
+//
+//
+//				/* Create each network interface which is defined */
+//				for( NetworkType type : Globals.activeNetInterfaces )
+//				{
+//					NetworkInterface netInterface = NetworkUtils.activateNetworkInterface(type, trafficLight);
+//					trafficLight.addNetworkInterface(netInterface);
+//				}
+//
+//				/* Create each application which is defined for traffic light*/
+//				if (Globals.useTrafficLights || Globals.useDynamicTrafficLights)
+//					addTrafficLightApps(trafficLight);
+//
+//				//if another master traffic light exists
+//				if (!viewer.addTrafficLightViews(trafficLight)) {
+//					trafficLights.remove(trafficLight.getId());
+//				}
+//			}
+//			br.close();
+//
+//			//write the traffic lights to file for further runs
+//			writeToFileTrafficLights(outFile, trafficLights);
+//
+//		} catch (IOException ex) {
+//			ex.printStackTrace();
+//		} finally {
+//			try {
+//				fstream.close();
+//			} catch (IOException ex) {
+//				ex.printStackTrace();
+//			}
+//		}
+//		return trafficLights;
+//	}
 
-			/* read info data */
-			br.readLine();
-			/* Read data about traffic lights */
-			while ((line = br.readLine()) != null) {
-				logger.info(" We opened " + count + ". " + line);
-				
-				StringTokenizer st = new StringTokenizer(line, " ", false);
-				Long nodeId = Long.parseLong(st.nextToken()); /* node id */
-				Long wayId = Long.parseLong(st.nextToken()); /* way id */
-				
-				Node node = mobilityEngine.streetsGraph.get(wayId).getNode(nodeId);
-				node.setWayId(wayId);
-				
-				Way way = mobilityEngine.getWay(wayId);
-				int noWaysNeigh = 0;
-				if (way.neighs.containsKey(node.id)) {
-					noWaysNeigh = way.neighs.get(node.id).size();
-				}
-				count++;
-				GeoTrafficLightMaster trafficLight = new GeoTrafficLightMaster(count, node, noWaysNeigh);
-				
-				MapPoint mapPoint = MapPoint.getMapPoint(node);
-				mapPoint.segmentIndex = mobilityEngine.getSegmentNumber(node);
-				
-				if (mapPoint.segmentIndex < mobilityEngine.getWay(wayId).nodes.size() - 1)
-					mapPoint.cellIndex = mobilityEngine.getCellIndex(node, mobilityEngine.streetsGraph.get(wayId).getNodeByIndex(mapPoint.segmentIndex + 1), mapPoint);
-				else {
-					if (mapPoint.segmentIndex <= 0)
-						mapPoint.segmentIndex = 1;
-					mapPoint.cellIndex = mobilityEngine.getCellIndex(mobilityEngine.streetsGraph.get(wayId).getNodeByIndex(mapPoint.segmentIndex - 1), node, mapPoint);
-				}
-				trafficLight.setCurrentPos(mapPoint);
-				trafficLights.put(trafficLight.getId(), trafficLight);
-				
-				
-				/* Create each network interface which is defined */
-				for( NetworkType type : Globals.activeNetInterfaces )
-				{
-					NetworkInterface netInterface = NetworkUtils.activateNetworkInterface(type, trafficLight);
-					trafficLight.addNetworkInterface(netInterface);
-				}
-				
-				/* Create each application which is defined for traffic light*/
-				if (Globals.useTrafficLights || Globals.useDynamicTrafficLights)
-					addTrafficLightApps(trafficLight);
-
-				//if another master traffic light exists
-				if (!viewer.addTrafficLightViews(trafficLight)) {
-					trafficLights.remove(trafficLight.getId());
-				}
-			}
-			br.close();
-			
-			//write the traffic lights to file for further runs
-			writeToFileTrafficLights(outFile, trafficLights);
-			
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		} finally {
-			try {
-				fstream.close();
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		}
-		return trafficLights;
-	}
 	
 	/***
 	 * Return a list of master traffic lights from traces file or from previous runs.
@@ -574,7 +577,7 @@ public final class EngineUtils {
 	 * @param mobilityEngine
 	 * @return
 	 */
-	static TreeMap<Long,GeoTrafficLightMaster> getTrafficLights(String trafficLightListFilename,
+	static TreeMap<Long,TrafficLightModel> getTrafficLights(String trafficLightListFilename,
 			String trafficLightsLoaded, Viewer viewer, MobilityEngine mobilityEngine) {
 
 		/* check if file with traffic lights exists */
@@ -583,7 +586,8 @@ public final class EngineUtils {
 			/* read the traffic lights configuration from here */
 			return readExistingTrafficLights(trafficLightsLoaded, viewer, mobilityEngine);
 		}
-		return readTrafficLights(trafficLightListFilename, trafficLightsLoaded, viewer, mobilityEngine);
+		//return readTrafficLights(trafficLightListFilename, trafficLightsLoaded, viewer, mobilityEngine);
+		return null;
 	}
 	
 	

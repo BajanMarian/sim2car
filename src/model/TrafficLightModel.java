@@ -1,5 +1,6 @@
 package model;
 
+import application.trafficLight.ApplicationTrafficLightControlData;
 import gui.TrafficLightView;
 import model.OSMgraph.Node;
 import utils.Pair;
@@ -9,6 +10,10 @@ import java.util.List;
 import java.util.TreeMap;
 
 public abstract class TrafficLightModel extends Entity{
+
+    public abstract void changeColor();
+    public abstract void addCarToQueue(ApplicationTrafficLightControlData data);
+    public abstract void addNode(Node n);
 
     public Node emplacement;
 
@@ -30,5 +35,24 @@ public abstract class TrafficLightModel extends Entity{
         this.waitingQueue = new TreeMap<>();
     }
 
-    public abstract void changeColor();
+    public void addTrafficLightView(TrafficLightView trafficLightView) {
+        this.trafficLightViewList.add(trafficLightView);
+    }
+
+    public boolean containsTrafficLightByWay(long wayId) {
+        for (TrafficLightView trafficLightView : trafficLightViewList) {
+            if (trafficLightView.getWayId() == wayId)
+                return true;
+        }
+        return false;
+    }
+
+    public Node getNode() {
+        return emplacement;
+    }
+
+    public void setNode(Node node) {
+        this.emplacement = node;
+    }
+
 }

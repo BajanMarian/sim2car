@@ -34,6 +34,7 @@ public class SmartTrafficLight extends TrafficLightModel {
     private double countGreenColorGroupOne = 50;
 
     private long lastChanged;
+    private boolean tookDecision = true;
 
     private void initComplementaryPairs() {
         greenGroup = 0;
@@ -71,6 +72,10 @@ public class SmartTrafficLight extends TrafficLightModel {
         if (greenGroup == 1 && color.equals("red")) return complementaryGroups.getFirst();
         if (greenGroup == 1 && color.equals("green")) return complementaryGroups.getSecond();
         return null;
+    }
+
+    public void addNode(Node currentNode) {
+        return;
     }
 
     public double getGreenLightTimeByGroup(int id) {
@@ -169,7 +174,15 @@ public class SmartTrafficLight extends TrafficLightModel {
             }
 
             this.lastChanged = SimulationEngine.getInstance().getSimulationTime();
-            trafficLightViewList.forEach(tf -> tf.changeColor());
+            this.tookDecision = true;
+            //trafficLightViewList.forEach(tf -> tf.updateTrafficLightView());
+        }
+    }
+
+    public void updateTrafficLightViews() {
+        if (tookDecision) {
+            trafficLightViewList.forEach(tf -> tf.updateTrafficLightView());
+            this.tookDecision = true;
         }
     }
 
@@ -202,10 +215,6 @@ public class SmartTrafficLight extends TrafficLightModel {
          * data.getDirection(),
          * waitingQueue.get(key).getSecond());*/
     }
-
-    // 3 timpi - (simulator, de_cand_asteapta_prima_masina, de_cand_nu_s-a mai schimbat un semafor)
-    // conteaza si dimensiunea cozilor
-    // Conteaza numarul de unitati care trec
 
     /**
      * Checks if an intersection has exactly one queue with cars

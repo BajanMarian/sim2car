@@ -97,11 +97,14 @@ public class Globals {
 	@Parameter(names = {"--useDynamicTrafficLights"}, description = "If true, use traffic lights")
 	public static boolean useDynamicTrafficLights = true;
 
+	@Parameter(names = {"--typeOfTrafficLight"}, description = "0=GeoTrafficLightMaster, 1=SmartTrafficLight")
+	public static int typeOfTrafficLight = 1;
+
 	@Parameter(names = {"--maxNoTrafficLight"}, description = "Maximum number of trafficLightsMasters read from their file")
-	public static int maxNoTrafficLight = 500;
+	public static int maxNoTrafficLight = 1000;
 
 	@Parameter(names = {"--displayTrafficLightsIds"}, description = "Display traffic lights' group id")
-	public static boolean displayTrafficLightsIds = false;
+	public static boolean displayTrafficLightsIds = true;
 
 	@Parameter(names = {"--displayCarsIds"}, description = "Display ids of cars in order to track their routes")
 	public static boolean displayCarsIds = false;
@@ -148,7 +151,7 @@ public class Globals {
 	@Parameter(names = {"--activeApps"}, description = "the accepted values ROUTING,TILES,STREET_VISITS,TRAFFIC_LIGHT_CONTROL."
 													 + "Please see ApplicationType for more details\n."
 													 + "Multiple applications can be passed using --activeApps=app1,app2,app3,..,appn")
-	public static String activeApps = "ROUTING,TRAFFIC_LIGHT_CONTROL,SYNCHRONIZE_INTERSECTIONS";
+	public static String activeApps = "ROUTING"; //MODY
 	/* The default application is ROUTING_APP */
 	public static Vector<ApplicationType> activeApplications;
 

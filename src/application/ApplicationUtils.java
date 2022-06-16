@@ -14,6 +14,7 @@ import application.trafficLight.ApplicationTrafficLightControl;
 import model.GeoCar;
 import model.GeoServer;
 import model.GeoTrafficLightMaster;
+import model.TrafficLightModel;
 import model.parameters.Globals;
 
 /**
@@ -49,7 +50,7 @@ public class ApplicationUtils {
 	 * @param trafficLight - Traffic Light object
 	 * @return
 	 */
-	public static Application activateApplicationTrafficLight( ApplicationType type, GeoTrafficLightMaster trafficLight)
+	public static Application activateApplicationTrafficLight( ApplicationType type, TrafficLightModel trafficLight)
 	{
 		switch (type) {
 			case TRAFFIC_LIGHT_CONTROL_APP:

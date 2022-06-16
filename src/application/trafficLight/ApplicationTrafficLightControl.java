@@ -8,6 +8,7 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import model.GeoTrafficLightMaster;
+import model.TrafficLightModel;
 import model.network.Message;
 import model.network.MessageType;
 import model.parameters.Globals;
@@ -33,7 +34,7 @@ public class ApplicationTrafficLightControl extends Application {
 	private ApplicationType type = ApplicationType.TRAFFIC_LIGHT_CONTROL_APP;
 
 	/* Reference to the traffic light master object */
-	GeoTrafficLightMaster trafficLightMaster;
+	TrafficLightModel trafficLightMaster;
 	
 	/* key = trafficLightMasterId value = (avg_waiting_time, avg_queue_length) */
 	public static TreeMap<Long, String> queuesStatistics = new TreeMap<Long, String>();
@@ -41,7 +42,7 @@ public class ApplicationTrafficLightControl extends Application {
 	/* If it demands a route or not */
 	public boolean isActive = false;
 
-	public ApplicationTrafficLightControl(GeoTrafficLightMaster trafficLightMaster){
+	public ApplicationTrafficLightControl(TrafficLightModel trafficLightMaster){
 		this.trafficLightMaster = trafficLightMaster;
 	}
 

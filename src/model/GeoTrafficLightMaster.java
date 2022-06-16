@@ -328,14 +328,7 @@ public class GeoTrafficLightMaster extends TrafficLightModel{
 	public void setIntersectionType(int intersectionType) {
 		this.intersectionType = intersectionType;
 	}
-	
-	public Node getNode() {
-		return emplacement;
-	}
 
-	public void setNode(Node node) {
-		this.emplacement = node;
-	}
 		
 	public List<TrafficLightView> getTrafficLights() {
 		return trafficLightViewList;
@@ -343,18 +336,6 @@ public class GeoTrafficLightMaster extends TrafficLightModel{
 
 	public void setTrafficLights(List<TrafficLightView> trafficLightViewList) {
 		this.trafficLightViewList = trafficLightViewList;
-	}
-	
-	public void addTrafficLightView(TrafficLightView trafficLightView) {
-		this.trafficLightViewList.add(trafficLightView);
-	}
-	
-	public boolean containsTrafficLightByWay(long wayId) {
-		for (TrafficLightView trafficLightView : trafficLightViewList) {
-			if (trafficLightView.getWayId() == wayId) 
-				return true;
-		}
-		return false;
 	}
 	
 	public Color getTrafficLightColor(long wayId, int direction) {
