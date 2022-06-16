@@ -29,7 +29,7 @@ import model.parameters.Globals;
  * @author Andreea
  *
  */
-public class GeoTrafficLightMaster extends Entity{
+public class GeoTrafficLightMaster extends TrafficLightModel{
 
 	private long sumWaitingTime = 0;
 	private long sumQueueLength = 0;
@@ -41,22 +41,11 @@ public class GeoTrafficLightMaster extends Entity{
 	/** If the traffic light is still active */
 	public int active = 1;
 	
-	/** traffic light node center */
-	private Node node;
-	
 	/** traffic light nodes for entities */
 	private List<Node> nodes = new ArrayList<Node>();
 
-	/** Number of cars waiting for green for each direction
-	 * Waiting time for the first car
-	 * key - (way_id, direction)  value - (firstCarWaitingTime, noCarsWaiting)*/
-	private TreeMap<Pair<Long, Integer>, Pair<Long, Integer>> waitingQueue;
-	
 	/** Maximum number of cars waiting for green */
 	private int maxNoCarsWaiting = 0;
-
-	/** traffic lights view for current intersection */
-	private List<TrafficLightView> trafficLightViewList = new ArrayList<TrafficLightView>();
 	
 	private Integer updateLock = 1;
 	
@@ -85,11 +74,10 @@ public class GeoTrafficLightMaster extends Entity{
 	}
 
 	public GeoTrafficLightMaster(long id, Node node, int intersectionType) {
-		super(id);
-		this.node = node;
+		super(id, node);
+		this.emplacement = node;
 		this.intersectionType = intersectionType;
 		this.mobility = MobilityEngine.getInstance();
-		this.waitingQueue = new TreeMap<Pair<Long, Integer>, Pair<Long,Integer>>();
 	}
 	
 	public void collectWaitingQueueStatistics(long stopTime, long noCarsWaiting) {
@@ -279,9 +267,9 @@ public class GeoTrafficLightMaster extends Entity{
 		Pair<Long, Integer> key = new Pair<Long, Integer>(data.getWayId(), data.getDirection());
 		
 		long wayFromMaster = data.getFromNode().wayId;
-		long wayMaster = this.node.wayId;
+		long wayMaster = this.emplacement.wayId;
 		//Get all ways from this intersection (where this master traffic light is situated)
-		List<Long> thisIntersection = mobility.streetsGraph.get(wayMaster).neighs.get(this.node.id);
+		List<Long> thisIntersection = mobility.streetsGraph.get(wayMaster).neighs.get(this.emplacement.id);
 		
 		long link = 0;
 		//Get all ways from the first intersection (traffic light)
@@ -342,11 +330,11 @@ public class GeoTrafficLightMaster extends Entity{
 	}
 	
 	public Node getNode() {
-		return node;
+		return emplacement;
 	}
 
 	public void setNode(Node node) {
-		this.node = node;
+		this.emplacement = node;
 	}
 		
 	public List<TrafficLightView> getTrafficLights() {
