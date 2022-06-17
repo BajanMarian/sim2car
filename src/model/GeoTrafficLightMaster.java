@@ -40,9 +40,7 @@ public class GeoTrafficLightMaster extends TrafficLightModel{
 
 	/** If the traffic light is still active */
 	public int active = 1;
-	
-	/** traffic light nodes for entities */
-	private List<Node> nodes = new ArrayList<Node>();
+
 
 	/** Maximum number of cars waiting for green */
 	private int maxNoCarsWaiting = 0;
@@ -65,13 +63,6 @@ public class GeoTrafficLightMaster extends TrafficLightModel{
 	/** intersection type */
 	private int intersectionType = 3;
 
-	public List<Node> getNodes() {
-		return nodes;
-	}
-
-	public void addNode(Node n) {
-		this.nodes.add(n);
-	}
 
 	public GeoTrafficLightMaster(long id, Node node, int intersectionType) {
 		super(id, node);
@@ -180,7 +171,10 @@ public class GeoTrafficLightMaster extends TrafficLightModel{
 		}
 		
 	}
-	
+	public void addTrafficLightView(TrafficLightView trafficLightView) {
+		this.trafficLightViewList.add(trafficLightView);
+	}
+
 	public void setChangeColor() {
 		simulationTimeLastChange = SimulationEngine.getInstance().getSimulationTime();
 		changeColor = true;
@@ -337,14 +331,7 @@ public class GeoTrafficLightMaster extends TrafficLightModel{
 	public void setTrafficLights(List<TrafficLightView> trafficLightViewList) {
 		this.trafficLightViewList = trafficLightViewList;
 	}
-	
-	public Color getTrafficLightColor(long wayId, int direction) {
-		for (TrafficLightView trafficLightView : trafficLightViewList) {
-			if (trafficLightView.getWayId() == wayId && trafficLightView.getDirection() == direction) 
-				return trafficLightView.getColor();
-		}
-		return Color.green;
-	}
+
 	
 	public String runApplications() {
 		String result = "";

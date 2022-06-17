@@ -1,7 +1,7 @@
 package model;
 
+import application.Application;
 import application.trafficLight.ApplicationTrafficLightControlData;
-import controller.newengine.EngineUtils;
 import controller.newengine.SimulationEngine;
 import gui.TrafficLightView;
 import model.OSMgraph.Node;
@@ -14,10 +14,6 @@ import java.util.*;
 public class SmartTrafficLight extends TrafficLightModel {
 
     private Integer lockQueue = 1;
-
-    /** keeps last time a slave traffic light was updated */
-    private TreeMap<TrafficLightView, Long> updatesTimestamps;
-
     private MobilityEngine mobilityEngine;
 
     // tells what group is the green in a moment of time
@@ -25,16 +21,17 @@ public class SmartTrafficLight extends TrafficLightModel {
     private int greenGroup;
     private Pair<List<TrafficLightView>, List<TrafficLightView>> complementaryGroups;
     private List<Integer> carsRemainedInQueue;
-    private static long minTimeBeforeChange = 10;
-    private long maximumTimeGreenLight = 60;
 
-    // the amount of time for a light to be read and green.
-    private static double oneCycle = 100;
-    // the maximum amount of time group one can stay on green
-    private double countGreenColorGroupOne = 50;
+    private static long maxTime = 50;
+    private long minTime = 10;
 
-    private long lastChanged;
-    private boolean tookDecision = true;
+    private long lastTimeUpdate;
+    private long decidedTime;
+    private boolean shouldChangeColor;
+
+    private boolean isEmergency = false;
+    private boolean emergencyMode = false;
+    TrafficLightView tlvEmergency = null;
 
     private void initComplementaryPairs() {
         greenGroup = 0;
@@ -44,7 +41,9 @@ public class SmartTrafficLight extends TrafficLightModel {
 
     public SmartTrafficLight(long id, Node node) {
         super(id, node);
-        this.lastChanged =  SimulationEngine.getInstance().getSimulationTime();
+        this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
+        this.decidedTime = this.minTime;
+        this.shouldChangeColor = false;
         this.mobilityEngine = MobilityEngine.getInstance();
         initComplementaryPairs();
     }
@@ -53,9 +52,8 @@ public class SmartTrafficLight extends TrafficLightModel {
         return this.emplacement;
     }
 
-    public void addTrafficLightSlave(TrafficLightView trafficLight) {
+    public void addTrafficLightView(TrafficLightView trafficLight) {
         this.trafficLightViewList.add(trafficLight);
-        this.updatesTimestamps.put(trafficLight, SimulationEngine.getInstance().getSimulationTime());
 
         if(complementarySwitching) {
             if (trafficLight.getColorString().equals("green")) {
@@ -74,115 +72,110 @@ public class SmartTrafficLight extends TrafficLightModel {
         return null;
     }
 
-    public void addNode(Node currentNode) {
-        return;
-    }
-
-    public double getGreenLightTimeByGroup(int id) {
-        if(id == 0) {
-            return countGreenColorGroupOne;
-        } else {
-            return oneCycle - countGreenColorGroupOne;
-        }
-    }
-
-    public int getRedGroupId() {
-        if (greenGroup == 0)
-            return 1;
-        return 0;
-    }
-
-    public int getGreenGroupId() {
-        if (greenGroup == 0)
-            return 0;
-        return 1;
-    }
-
-    public void changeLights() {
-        if(greenGroup == 0) {
-            greenGroup = 1;
-        } else {
-            greenGroup = 0;
-        }
-    }
-
+    // base scenario
     public boolean canCommute() {
-        if (SimulationEngine.getInstance().getSimulationTime() - this.lastChanged > this.minTimeBeforeChange) {
+        if (SimulationEngine.getInstance().getSimulationTime() - this.lastTimeUpdate > this.decidedTime) {
             return true;
         }
         return false;
     }
 
-    private int sumCarsRemainedInQueues() {
+    public int sumCarsRemainedInQueues() {
         int total = carsRemainedInQueue.stream().mapToInt(noCars -> noCars).sum();
         return total;
     }
 
+    public long computeTimeRaise() {
+        return sumCarsRemainedInQueues() / 2;
+    }
+
     public void changeColor() {
 
+        // if enters this function, it should commute, meaning take a decision based on QueuesLen
         if (canCommute()) {
 
             // improve superior time
-            if( sumCarsRemainedInQueues() > 0) {
-                this.maximumTimeGreenLight += (sumCarsRemainedInQueues() / 2);
+            if (sumCarsRemainedInQueues() > 0) {
+                long timeRaise = computeTimeRaise();
+                if (this.maxTime + timeRaise < Globals.maxTrafficLightTime) {
+                    this.maxTime += timeRaise;
+                }
             }
 
-            if (Globals.useDynamicTrafficLights && complementarySwitching) {
+            if (emergencyMode) {
+                // At this moment all trafficLights should be red
+                tlvEmergency.updateTrafficLightView();
+                // this are the greenLights which were turn off when ambulance came
+                getLightsByColor("green").forEach(redTFV -> {
+                    redTFV.updateTrafficLightView();
+                });
+                emergencyMode = false;
+            }
 
-                // Track the sum of all waiting queues; also keep the biggest queue length
-                /*for (TrafficLightView tf : getLightsByColor("red")) {
-                    Long tfStreet = tf.getWayId();
-                    Integer tfStreetDir = tf.getDirection();*/
+            if (Globals.useDynamicTrafficLights && complementarySwitching && waitingQueue.size() > 0) {
 
-                long biggestQueueLen = -1;
-                long sumAllQueues = 0;
-                List<Integer> bigQueues = new ArrayList<>();
-                long switchTime = minTimeBeforeChange;
+                long maxQueueLen = -1;
+                long allCarsStopped = 0;
+                List<Integer> longQueues = new ArrayList<>();
+                int queueLenCanPass = (int) (this.maxTime / Globals.passIntersectionTime);
 
                 synchronized (lockQueue) {
                     for (Pair<Long, Integer> key : waitingQueue.keySet()) {
+                        int currentQueueLen = waitingQueue.get(key).getSecond();
+                        allCarsStopped += currentQueueLen;
 
-                        if (key.getSecond() > biggestQueueLen) {
-                            biggestQueueLen = key.getSecond();
+                        if (currentQueueLen > maxQueueLen) {
+                            maxQueueLen = currentQueueLen;
                         }
 
-                        if (this.maximumTimeGreenLight / Globals.passIntersectionTime < key.getSecond()) {
-                            bigQueues.add(key.getSecond());
+                        if (queueLenCanPass < currentQueueLen) {
+                            longQueues.add(currentQueueLen);
                         }
-
-                        sumAllQueues += key.getSecond();
                     }
                 }
 
-                if (sumAllQueues > 0) {
-                    if (bigQueues.isEmpty()) {
-                        switchTime = biggestQueueLen * Globals.passIntersectionTime;
+                if (allCarsStopped > 0) {
+
+                    if (longQueues.isEmpty()) {
+                         decidedTime = maxQueueLen * Globals.passIntersectionTime;
                     } else {
 
-                        switchTime = this.maximumTimeGreenLight;
-                        Integer maxCarCanPass = Math.toIntExact((this.maximumTimeGreenLight / Globals.passIntersectionTime));
+                        decidedTime = this.maxTime;
                         int redGroupId = getRedGroupId();
 
-                        bigQueues.forEach(noCars -> {
-                            Integer val = carsRemainedInQueue.get(redGroupId);
-                            val += noCars - maxCarCanPass;
-                            carsRemainedInQueue.set(redGroupId, val);
+                        longQueues.forEach(queueLength -> {
+                            int noCars = carsRemainedInQueue.get(redGroupId);
+                            noCars += (queueLength - queueLenCanPass);
+                            carsRemainedInQueue.set(redGroupId, noCars);
                         });
                     }
                 }
                 waitingQueue.clear(); // SmartTrafficLight made a decision based on Queue dimension
+
             }
 
-            this.lastChanged = SimulationEngine.getInstance().getSimulationTime();
-            this.tookDecision = true;
-            //trafficLightViewList.forEach(tf -> tf.updateTrafficLightView());
+            this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
+            switchLightGroups();
+            this.shouldChangeColor = true;
+        } else if (isEmergency) {
+            this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
+            this.decidedTime = Globals.maxTrafficLightTime * 3;
         }
     }
 
     public void updateTrafficLightViews() {
-        if (tookDecision) {
+        if (shouldChangeColor) {
             trafficLightViewList.forEach(tf -> tf.updateTrafficLightView());
-            this.tookDecision = true;
+            this.shouldChangeColor = false;
+        }
+
+        if (isEmergency) {
+            tlvEmergency.updateTrafficLightView();
+            getLightsByColor("green").forEach(greenTLV -> {
+                greenTLV.updateTrafficLightView();
+            });
+            isEmergency = false;
+            emergencyMode = true;
         }
     }
 
@@ -208,7 +201,7 @@ public class SmartTrafficLight extends TrafficLightModel {
                     new Pair<>(waitingQueue.get(street).getFirst(), waitingQueue.get(street).getSecond() + 1);
             waitingQueue.put(street, updatedQueue);
         }
-
+        int a = 10;
         /** TODO !!! PROCESS THIS DATA
          * data.getMapPoint(),
          * data.getWayId(),
@@ -216,37 +209,37 @@ public class SmartTrafficLight extends TrafficLightModel {
          * waitingQueue.get(key).getSecond());*/
     }
 
-    /**
-     * Checks if an intersection has exactly one queue with cars
-     * @param   waitingCars a list with numberOfCars waiting on each queue
-     * @return  number of Cars in that queue or
-     *          -1 if two queues have cars or there is no car waiting
-     */
-    public int exactlyOneQueueHasCars(List<Integer> waitingCars) {
-        int numberCars = -1;
-        for(Integer queueLen : waitingCars) {
-            if (queueLen > 0 && numberCars == -1) {
-                numberCars = queueLen;
-            } else if (queueLen > 0) {
-                // return false if 2 queues have cars
-                return -1;
-            }
-        }
-
-        return numberCars;
+    public void setGreenForEmergency(ApplicationTrafficLightControlData data) {
+        Pair<Long, Integer> priorityStreet = new Pair<>(data.getWayId(), data.getDirection());
+        isEmergency = true;
+        tlvEmergency = findTrafficLightByWay(priorityStreet.getFirst());
     }
 
-    private List<TrafficLightView> getTLbyWay(long wayId) {
-        List<TrafficLightView> trafficLightList = new ArrayList<>();
-        for (TrafficLightView slave: trafficLightViewList) {
-            if(slave.getWayId() == wayId) {
-                trafficLightList.add(slave);
-            }
-        }
+    public int getRedGroupId() {
+        if (greenGroup == 0)
+            return 1;
+        return 0;
+    }
 
-        if(!trafficLightList.isEmpty()) {
-            return trafficLightList;
+    public int getGreenGroupId() {
+        if (greenGroup == 0)
+            return 0;
+        return 1;
+    }
+
+    public void switchLightGroups() {
+        if(greenGroup == 0) {
+            greenGroup = 1;
+        } else {
+            greenGroup = 0;
         }
-        return null;
+    }
+
+    public String runApplications() {
+        String result = "";
+        for (Application application : this.applications) {
+            result += application.run();
+        }
+        return result;
     }
 }

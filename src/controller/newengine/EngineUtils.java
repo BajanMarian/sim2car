@@ -441,10 +441,7 @@ public final class EngineUtils {
 						Long nodeId = Long.parseLong(st.nextToken());
 						Long wayId = Long.parseLong(st.nextToken());
 						Node node = mobilityEngine.streetsGraph.get(wayId).getNode(nodeId);
-						if (master instanceof GeoTrafficLightMaster) {
-							((GeoTrafficLightMaster) master).addNode(node);
-						}
-
+						master.addNode(node);
 					}
 				}
 				else {

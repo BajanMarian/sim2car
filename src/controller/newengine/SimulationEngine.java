@@ -15,10 +15,7 @@ import application.ApplicationType;
 import application.routing.RoutingApplicationCar;
 import application.routing.RoutingApplicationParameters;
 import application.trafficLight.ApplicationTrafficLightControl;
-import model.Entity;
-import model.GeoCar;
-import model.GeoServer;
-import model.GeoTrafficLightMaster;
+import model.*;
 import model.mobility.MobilityEngine;
 import model.parameters.Globals;
 import model.parameters.MapConfig;
@@ -136,6 +133,11 @@ public class SimulationEngine implements EngineInterface {
 						trafficLight.start();
 					}
 				}
+
+				if(e instanceof SmartTrafficLight) {
+					SmartTrafficLight stf = (SmartTrafficLight) e;
+					mobilityEngine.addTrafficLight(stf);
+				}
 			}
 
 			viewer.updateCarPositions();
@@ -151,8 +153,13 @@ public class SimulationEngine implements EngineInterface {
 					if (e instanceof GeoCar && ((GeoCar) e).getActive() == 1) {
 						threadPool.submit(new CarApplicationsRun((GeoCar) e));
 					}
+
+					// TODO !!! changeME
 					if (e instanceof GeoTrafficLightMaster && ((GeoTrafficLightMaster) e).getActive() == 1) {
 						threadPool.submit(new TrafficLightApplicationsRun((GeoTrafficLightMaster) e));
+					}
+					if (e instanceof SmartTrafficLight) {
+						threadPool.submit(new TrafficLightApplicationsRun((SmartTrafficLight) e));
 					}
 
 				}
@@ -181,6 +188,9 @@ public class SimulationEngine implements EngineInterface {
 				for (Entity e : entities.values()) {
 					if (e instanceof GeoTrafficLightMaster && ((GeoTrafficLightMaster) e).getActive() == 1) {
 						threadPool.submit(new TrafficLightChangeColor((GeoTrafficLightMaster) e));
+					}
+					if (e instanceof SmartTrafficLight) {
+						threadPool.submit(new TrafficLightChangeColor((SmartTrafficLight) e));
 					}
 				}
 				threadPool.waitForThreadPoolProcessing();

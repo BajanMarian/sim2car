@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
-import model.GeoTrafficLightMaster;
+import model.SmartTrafficLight;
 import model.TrafficLightModel;
 import model.network.Message;
 import model.network.MessageType;
@@ -89,7 +89,13 @@ public class ApplicationTrafficLightControl extends Application {
 			if( data != null ) {
 				trafficLightMaster.addCarToQueue(data);
 			}
+		} else if (m.getType() == MessageType.EMERGENCY && trafficLightMaster instanceof SmartTrafficLight) {
+			ApplicationTrafficLightControlData data = (ApplicationTrafficLightControlData)m.getPayload();
+			if( data != null) {
+				((SmartTrafficLight) trafficLightMaster).setGreenForEmergency(data);
+			}
 		}
+
 	}
 	
 	public static void writeWaitingTimeStatistics() {

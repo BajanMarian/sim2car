@@ -275,7 +275,7 @@ public class GeoCar extends Entity {
 
 	/** Update the speed of the car given the traffic light ahead. */
 	public void updateSpeedTrafficLightAhead() {
-		GeoTrafficLightMaster trafficLightInFront = (GeoTrafficLightMaster) elementAhead.getFirst();
+		TrafficLightModel trafficLightInFront = (TrafficLightModel) elementAhead.getFirst();
 		Double distance = elementAhead.getSecond();
 
 		if (trafficLightInFront == null) {
@@ -289,12 +289,19 @@ public class GeoCar extends Entity {
 			/* The car is close to the traffic light and the traffic light is red -> stop */
 			if (distance < 25 && trafficLightInFront.getTrafficLightColor(wayId, direction) == Color.red
 					&& !isStoppedAtTrafficLight()) {
+
 				// System.out.println("stop " + this.getCurrentPos());
+				// currently this id
 				speed = 0;
 				acceleration = 0;
 				setStopppedAtTrafficLight(true);
-				if (Globals.useTrafficLights || Globals.useDynamicTrafficLights)
-					sendDataToTrafficLight(trafficLightInFront, wayId, direction, this.getCurrentPos());
+				if (Globals.useTrafficLights || Globals.useDynamicTrafficLights) {
+					if(this.getId()  > 250) {
+						//sendEmergencySignal(trafficLightInFront, wayId, direction, this.getCurrentPos());
+					} else {
+						sendDataToTrafficLight(trafficLightInFront, wayId, direction, this.getCurrentPos());
+					}
+				}
 			} else {
 
 				/*
@@ -313,6 +320,29 @@ public class GeoCar extends Entity {
 		}
 	}
 
+	public void sendEmergencySignal(TrafficLightModel trafficLightMaster, Long wayId, int direction,
+									   MapPoint mapPoint) {
+
+		NetworkInterface net = this.getNetworkInterface(NetworkType.Net_WiFi);
+		NetworkInterface discoveredTrafficLightMaster = ((NetworkWiFi) net).discoverTrafficLight(trafficLightMaster);
+
+		Message msg = new Message(this.getId(), discoveredTrafficLightMaster.getOwner().getId(), null,
+				MessageType.EMERGENCY, ApplicationType.TRAFFIC_LIGHT_CONTROL_APP);
+		ApplicationTrafficLightControlData data = new ApplicationTrafficLightControlData();
+
+		data.setCarId(this.getId());
+		data.setWayId(wayId);
+		data.setDirection(direction);
+		data.setMapPoint(mapPoint);
+		data.setTimeStop(SimulationEngine.getInstance().getSimulationTime());
+
+		// System.out.println("Car " + this.getId() + " sends data to traffic light " +
+		// trafficLightMaster.getId());
+		msg.setPayload(data);
+		net.putMessage(msg);
+
+	}
+
 	/***
 	 * Sends a message via Wi-Fi to the master traffic light in front to notify it
 	 * about its presence. The master traffic light will put the car to the
@@ -322,7 +352,7 @@ public class GeoCar extends Entity {
 	 * @param wayId
 	 * @param direction
 	 */
-	public void sendDataToTrafficLight(GeoTrafficLightMaster trafficLightMaster, Long wayId, int direction,
+	public void sendDataToTrafficLight(TrafficLightModel trafficLightMaster, Long wayId, int direction,
 			MapPoint mapPoint) {
 		NetworkInterface net = this.getNetworkInterface(NetworkType.Net_WiFi);
 		NetworkInterface discoveredTrafficLightMaster = ((NetworkWiFi) net).discoverTrafficLight(trafficLightMaster);

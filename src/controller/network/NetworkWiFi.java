@@ -3,10 +3,7 @@ package controller.network;
 import java.util.ArrayList;
 import java.util.List;
 
-import model.Entity;
-import model.GeoCar;
-import model.GeoServer;
-import model.GeoTrafficLightMaster;
+import model.*;
 import model.network.Message;
 import utils.tracestool.Utils;
 
@@ -184,7 +181,7 @@ public class NetworkWiFi extends NetworkInterface {
 		return mtlInRange.getNetworkInterface(this.getType());
 	}
 	
-	public NetworkInterface discoverTrafficLight(GeoTrafficLightMaster trafficLightMaster) {
+	public NetworkInterface discoverTrafficLight(TrafficLightModel trafficLightMaster) {
 		Entity owner = getOwner();
 		long dist = 0;
 

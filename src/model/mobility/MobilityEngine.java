@@ -11,11 +11,8 @@ import java.util.logging.Logger;
 import application.routing.RoutingApplicationData.RoutingApplicationState;
 import application.routing.RoutingApplicationParameters;
 import application.routing.RoutingRoadCost;
-import model.Entity;
-import model.GeoCar;
-import model.GeoCarRoute;
-import model.GeoTrafficLightMaster;
-import model.MapPoint;
+import gui.TrafficLightView;
+import model.*;
 import model.OSMgraph.Cell;
 import model.OSMgraph.Node;
 import model.OSMgraph.Way;
@@ -104,7 +101,7 @@ public class MobilityEngine {
 	/**
 	 * Removes a given car from the cell queue, based on its current position.
 	 * 
-	 * @param car	the car to be removed
+	 * @param entityId	the car to be removed
 	 */
 	public void removeCar(MapPoint point, long entityId) {
 
@@ -158,7 +155,7 @@ public class MobilityEngine {
 	 * @param trafficLightMaster the traffic light to be added to the cell queue
 	 * @return true	if the cell has been added successfully, false otherwise
 	 */
-	public boolean addTrafficLight(GeoTrafficLightMaster trafficLightMaster) {
+	public boolean addTrafficLight(TrafficLightModel trafficLightMaster) {
 		Node node = trafficLightMaster.getNode();
 		Way way = streetsGraph.get(node.wayId);
 

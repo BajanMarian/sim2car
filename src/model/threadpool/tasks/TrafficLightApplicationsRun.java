@@ -1,12 +1,13 @@
 package model.threadpool.tasks;
 
 import model.GeoTrafficLightMaster;
+import model.TrafficLightModel;
 
 public class TrafficLightApplicationsRun implements Runnable {
 
-	private GeoTrafficLightMaster trafficLightMaster;
+	private TrafficLightModel trafficLightMaster;
 	
-	public TrafficLightApplicationsRun(GeoTrafficLightMaster trafficLightMaster) {
+	public TrafficLightApplicationsRun(TrafficLightModel trafficLightMaster) {
 		this.trafficLightMaster = trafficLightMaster;
 	}
 	

@@ -1,12 +1,12 @@
 package model.threadpool.tasks;
 
-import model.GeoTrafficLightMaster;
+import model.TrafficLightModel;
 
 public class TrafficLightChangeColor implements Runnable{
 
-	private GeoTrafficLightMaster trafficLight;
+	private TrafficLightModel trafficLight;
 	
-	public TrafficLightChangeColor(GeoTrafficLightMaster trafficLight) {
+	public TrafficLightChangeColor(TrafficLightModel trafficLight) {
 		
 		this.trafficLight = trafficLight;
 	}

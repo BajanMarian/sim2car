@@ -19,6 +19,7 @@ public enum MessageType {
 	/* Used by TrafficLightControlApplication */
 	ADD_WAITING_QUEUE,
 	REMOVE_WAITING_QUEUE,
+	EMERGENCY,
 
 	/* Used by SynchronizeIntersectionsApplication */
 	SYNCHRONIZE_TRAFFIC_LIGHTS
