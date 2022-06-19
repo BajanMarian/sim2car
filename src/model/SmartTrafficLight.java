@@ -9,7 +9,10 @@ import model.mobility.MobilityEngine;
 import model.parameters.Globals;
 import utils.Pair;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 
 public class SmartTrafficLight extends TrafficLightModel {
 
@@ -22,20 +25,20 @@ public class SmartTrafficLight extends TrafficLightModel {
     private Pair<List<TrafficLightView>, List<TrafficLightView>> complementaryGroups;
     private List<Integer> carsRemainedInQueue;
 
-    private static long maxTime = 50;
+    private long maxTime = 50;
     private long minTime = 10;
 
     private long lastTimeUpdate;
     private long decidedTime;
     private boolean shouldChangeColor;
 
-    private boolean isEmergency = false;
-    private boolean emergencyMode = false;
-    TrafficLightView tlvEmergency = null;
+    private boolean receivedEmergencySignal = false;
+    private boolean isEmergencyMode = false;
+    private TrafficLightView tlvEmergency = null;
 
     private void initComplementaryPairs() {
         greenGroup = 0;
-        complementaryGroups = new Pair(new LinkedList<>(), new LinkedList<>());
+        complementaryGroups = new Pair(new ArrayList<>(), new ArrayList<>());
         carsRemainedInQueue =  new ArrayList<>(Collections.nCopies(2, 0));
     }
 
@@ -59,12 +62,12 @@ public class SmartTrafficLight extends TrafficLightModel {
             if (trafficLight.getColorString().equals("green")) {
                 complementaryGroups.getFirst().add(trafficLight);
             } else if (trafficLight.getColorString().equals("red")){
-                complementaryGroups.getFirst().add(trafficLight);
+                complementaryGroups.getSecond().add(trafficLight);
             }
         }
     }
 
-    private List<TrafficLightView> getLightsByColor(String color) {
+    public List<TrafficLightView> getLightsByColor(String color) {
         if (greenGroup == 0 && color.equals("green")) return complementaryGroups.getFirst();
         if (greenGroup == 0 && color.equals("red")) return complementaryGroups.getSecond();
         if (greenGroup == 1 && color.equals("red")) return complementaryGroups.getFirst();
@@ -102,14 +105,14 @@ public class SmartTrafficLight extends TrafficLightModel {
                 }
             }
 
-            if (emergencyMode) {
-                // At this moment all trafficLights should be red
-                tlvEmergency.updateTrafficLightView();
-                // this are the greenLights which were turn off when ambulance came
-                getLightsByColor("green").forEach(redTFV -> {
-                    redTFV.updateTrafficLightView();
+            // exit emergencyMode by restoring the lights color
+            if (isEmergencyMode) {
+                tlvEmergency.changeColor();
+                // these are the green lights which were switch to red after the emergency signal
+                getLightsByColor("green").forEach(greenTLV -> {
+                    greenTLV.changeColor();
                 });
-                emergencyMode = false;
+                isEmergencyMode = false;
             }
 
             if (Globals.useDynamicTrafficLights && complementarySwitching && waitingQueue.size() > 0) {
@@ -151,31 +154,31 @@ public class SmartTrafficLight extends TrafficLightModel {
                     }
                 }
                 waitingQueue.clear(); // SmartTrafficLight made a decision based on Queue dimension
-
             }
 
             this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
-            switchLightGroups();
+            switchLightGroups(); // huge problem here
             this.shouldChangeColor = true;
-        } else if (isEmergency) {
+        } else if (receivedEmergencySignal) {
             this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
-            this.decidedTime = Globals.maxTrafficLightTime * 3;
+            this.decidedTime = Globals.maxTrafficLightTime;
         }
     }
 
     public void updateTrafficLightViews() {
         if (shouldChangeColor) {
             trafficLightViewList.forEach(tf -> tf.updateTrafficLightView());
-            this.shouldChangeColor = false;
+            shouldChangeColor = false;
         }
 
-        if (isEmergency) {
-            tlvEmergency.updateTrafficLightView();
+        if (receivedEmergencySignal) {
             getLightsByColor("green").forEach(greenTLV -> {
                 greenTLV.updateTrafficLightView();
             });
-            isEmergency = false;
-            emergencyMode = true;
+            tlvEmergency.updateTrafficLightView();
+
+            receivedEmergencySignal = false;
+            isEmergencyMode = true;
         }
     }
 
@@ -210,9 +213,10 @@ public class SmartTrafficLight extends TrafficLightModel {
     }
 
     public void setGreenForEmergency(ApplicationTrafficLightControlData data) {
-        Pair<Long, Integer> priorityStreet = new Pair<>(data.getWayId(), data.getDirection());
-        isEmergency = true;
-        tlvEmergency = findTrafficLightByWay(priorityStreet.getFirst());
+        if (isEmergencyMode == false) {
+            receivedEmergencySignal = true;
+            tlvEmergency = findTrafficLightByWay(data.getWayId());
+        }
     }
 
     public int getRedGroupId() {
