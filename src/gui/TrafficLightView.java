@@ -88,6 +88,15 @@ public class TrafficLightView {
 					
 					if (currentPoint == null)
 						return;
+
+					/** Important: this should stay here no matter what!! The master is the real boss, and he knows
+					 * the color of this object from the input file reading phase. Even though this object does not
+					 * have a lastMapMarkerDot, it was previously added to the view and master decided to not change
+					 * its color based on his implemented algorithm.
+					 * changeColor() was moved before checking lastMk == null, initially being position after this block
+					 */
+					changeColor();
+
 					if (lastMk == null) {
 						//lastMk = new MapMarkerTrafficLight(trafficLightColor, currentPoint.lat, currentPoint.lon);
 						lastMk = new MapMarkerDot(currentPoint.lat, currentPoint.lon);
@@ -97,7 +106,6 @@ public class TrafficLightView {
 						return;
 					}
 
-					changeColor();
 					// remove the traffic light
 					if (lastMk != null) {
 						map.removeMapMarker(lastMk);
