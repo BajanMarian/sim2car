@@ -25,8 +25,14 @@ public class SmartTrafficLight extends TrafficLightModel {
     private Pair<List<TrafficLightView>, List<TrafficLightView>> complementaryGroups;
     private List<Integer> carsRemainedInQueue;
 
-    private long maxTime = 50;
-    private long minTime = 10;
+    // 1.If there are many long queues, then maxTime progressively increase his value to Globals.maxTrafficLightTime
+    // 2.Covers the cases when there are big queues just for one direction, and from the other there are few;
+    // It is FAIR for 2,3 cars to not wait for 15 to pass.
+    private long maxTime = 60;
+    private long normalTime = Globals.normalTrafficLightTime;
+    private int checkPhase = 1;
+    private int maximumCheckPhases = 4;
+
 
     private long lastTimeUpdate;
     private long decidedTime;
@@ -45,7 +51,7 @@ public class SmartTrafficLight extends TrafficLightModel {
     public SmartTrafficLight(long id, Node node) {
         super(id, node);
         this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
-        this.decidedTime = this.minTime;
+        this.decidedTime = this.normalTime;
         this.shouldChangeColor = false;
         this.mobilityEngine = MobilityEngine.getInstance();
         initComplementaryPairs();
@@ -75,7 +81,7 @@ public class SmartTrafficLight extends TrafficLightModel {
         return null;
     }
 
-    // base scenario
+
     public boolean canCommute() {
         if (SimulationEngine.getInstance().getSimulationTime() - this.lastTimeUpdate > this.decidedTime) {
             return true;
@@ -103,6 +109,27 @@ public class SmartTrafficLight extends TrafficLightModel {
                 if (this.maxTime + timeRaise < Globals.maxTrafficLightTime) {
                     this.maxTime += timeRaise;
                 }
+
+            }
+
+            // after the last big queue that passed, switching time between lights should be the normal one
+            // cannot risk to give green light to nobody,then 5 cars are going to the red tf and wait for nothing
+            if (waitingQueue.size() == 0 && decidedTime > maxTime) {
+                decidedTime = normalTime;
+            }
+
+            // minimum decided time is time to pass for a single car; we can check by maximumCheckPhases=4 times to see
+            // if there are cars that coming and, if there are not, we should reset to normal. Energy argument.
+            if (waitingQueue.size() == 0 && decidedTime < normalTime) {
+                if (checkPhase == maximumCheckPhases) {
+                    decidedTime = normalTime;
+                    checkPhase = 1;
+                } else {
+                    checkPhase++;
+                }
+            } else {
+                // if any car came to a traffic light, reset checkPhase
+                checkPhase = 1;
             }
 
             // exit emergencyMode by restoring the lights color
@@ -114,7 +141,7 @@ public class SmartTrafficLight extends TrafficLightModel {
                 });
                 isEmergencyMode = false;
             }
-
+            // enters only if there are cars at the red light
             if (Globals.useDynamicTrafficLights && complementarySwitching && waitingQueue.size() > 0) {
 
                 long maxQueueLen = -1;
@@ -157,11 +184,11 @@ public class SmartTrafficLight extends TrafficLightModel {
             }
 
             this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
-            switchLightGroups(); // huge problem here
+            switchLightGroups();
             this.shouldChangeColor = true;
         } else if (receivedEmergencySignal) {
             this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
-            this.decidedTime = Globals.maxTrafficLightTime;
+            this.decidedTime = (long) (Globals.maxTrafficLightTime * 1.3);
         }
     }
 
