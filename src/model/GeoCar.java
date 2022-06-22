@@ -237,7 +237,7 @@ public class GeoCar extends Entity {
 		return speed + accel * (double) Globals.timePeriod;
 	}
 
-	/** Update the speed of the car given the the car ahead. */
+	/** Update the speed of the car given the car ahead. */
 	public void updateSpeedCarAhead() {
 		GeoCar carInFront = (GeoCar) elementAhead.getFirst();
 		Double distance = elementAhead.getSecond();
@@ -296,51 +296,21 @@ public class GeoCar extends Entity {
 				acceleration = 0;
 				setStopppedAtTrafficLight(true);
 				if (Globals.useTrafficLights || Globals.useDynamicTrafficLights) {
-					if(this.getId()  > 250) {
-						//sendEmergencySignal(trafficLightInFront, wayId, direction, this.getCurrentPos());
-					} else {
-						sendDataToTrafficLight(trafficLightInFront, wayId, direction, this.getCurrentPos());
-					}
+					sendDataToTrafficLight(trafficLightInFront, wayId, direction, this.getCurrentPos());
 				}
 			} else {
 
-				/*
-				 * The car is stopped at the traffic light and the traffic light is green ->
-				 * start
-				 */
+				/* The car is stopped at the traffic light and the traffic light is green -> start */
 				if (trafficLightInFront.getTrafficLightColor(wayId, direction) == Color.green
 						&& isStoppedAtTrafficLight()) {
 					// System.out.println("restart" + this.getCurrentPos());
 					setStopppedAtTrafficLight(false);
 				}
 
-				/* Compute free driving if the car is moving ant the traffic light is green */
+				/* Compute free driving if the car is moving and the traffic light is green */
 				speed = computeSpeedFreeDriving();
 			}
 		}
-	}
-
-	public void sendEmergencySignal(TrafficLightModel trafficLightMaster, Long wayId, int direction,
-									   MapPoint mapPoint) {
-
-		NetworkInterface net = this.getNetworkInterface(NetworkType.Net_WiFi);
-		NetworkInterface discoveredTrafficLightMaster = ((NetworkWiFi) net).discoverTrafficLight(trafficLightMaster);
-
-		Message msg = new Message(this.getId(), discoveredTrafficLightMaster.getOwner().getId(), null,
-				MessageType.EMERGENCY, ApplicationType.TRAFFIC_LIGHT_CONTROL_APP);
-		ApplicationTrafficLightControlData data = new ApplicationTrafficLightControlData();
-
-		data.setCarId(this.getId());
-		data.setWayId(wayId);
-		data.setDirection(direction);
-		data.setMapPoint(mapPoint);
-		data.setTimeStop(SimulationEngine.getInstance().getSimulationTime());
-
-		// System.out.println("Car " + this.getId() + " sends data to traffic light " +
-		// trafficLightMaster.getId());
-		msg.setPayload(data);
-		net.putMessage(msg);
-
 	}
 
 	/***
@@ -356,21 +326,31 @@ public class GeoCar extends Entity {
 			MapPoint mapPoint) {
 		NetworkInterface net = this.getNetworkInterface(NetworkType.Net_WiFi);
 		NetworkInterface discoveredTrafficLightMaster = ((NetworkWiFi) net).discoverTrafficLight(trafficLightMaster);
-
-		Message msg = new Message(this.getId(), discoveredTrafficLightMaster.getOwner().getId(), null,
-				MessageType.ADD_WAITING_QUEUE, ApplicationType.TRAFFIC_LIGHT_CONTROL_APP);
 		ApplicationTrafficLightControlData data = new ApplicationTrafficLightControlData();
 
-		data.setCarId(this.getId());
-		data.setWayId(wayId);
-		data.setDirection(direction);
-		data.setMapPoint(mapPoint);
-		data.setTimeStop(SimulationEngine.getInstance().getSimulationTime());
+		if (this.getId() < 45  && this.getId() > 35 ) {
+			Message msg = new Message(this.getId(), discoveredTrafficLightMaster.getOwner().getId(), null,
+					MessageType.EMERGENCY, ApplicationType.TRAFFIC_LIGHT_CONTROL_APP);
+			data.setWayId(wayId);
+			data.setDirection(direction);
+			msg.setPayload(data);
+			net.putMessage(msg);
 
-		// System.out.println("Car " + this.getId() + " sends data to traffic light " +
-		// trafficLightMaster.getId());
-		msg.setPayload(data);
-		net.putMessage(msg);
+		} else {
+			Message msg = new Message(this.getId(), discoveredTrafficLightMaster.getOwner().getId(), null,
+					MessageType.ADD_WAITING_QUEUE, ApplicationType.TRAFFIC_LIGHT_CONTROL_APP);
+
+			data.setCarId(this.getId());
+			data.setWayId(wayId);
+			data.setDirection(direction);
+			data.setMapPoint(mapPoint);
+			data.setTimeStop(SimulationEngine.getInstance().getSimulationTime());
+
+			// System.out.println("Car " + this.getId() + " sends data to traffic light " +
+			// trafficLightMaster.getId());
+			msg.setPayload(data);
+			net.putMessage(msg);
+		}
 
 	}
 

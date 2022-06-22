@@ -127,6 +127,7 @@ public class SimulationEngine implements EngineInterface {
 						car.start();
 					}
 				}
+
 				if (e instanceof GeoTrafficLightMaster) {
 					GeoTrafficLightMaster trafficLight = (GeoTrafficLightMaster) e;
 					if (trafficLight.getActive() == 1) {
@@ -136,6 +137,11 @@ public class SimulationEngine implements EngineInterface {
 
 				if(e instanceof SmartTrafficLight) {
 					SmartTrafficLight stf = (SmartTrafficLight) e;
+					mobilityEngine.addTrafficLight(stf);
+				}
+
+				if(e instanceof SmartTrafficLightExtended) {
+					SmartTrafficLightExtended stf = (SmartTrafficLightExtended) e;
 					mobilityEngine.addTrafficLight(stf);
 				}
 			}
@@ -154,12 +160,17 @@ public class SimulationEngine implements EngineInterface {
 						threadPool.submit(new CarApplicationsRun((GeoCar) e));
 					}
 
-					// TODO !!! changeME
+					// TODO !!! duplicated code should be avoided
 					if (e instanceof GeoTrafficLightMaster && ((GeoTrafficLightMaster) e).getActive() == 1) {
 						threadPool.submit(new TrafficLightApplicationsRun((GeoTrafficLightMaster) e));
 					}
+
 					if (e instanceof SmartTrafficLight) {
 						threadPool.submit(new TrafficLightApplicationsRun((SmartTrafficLight) e));
+					}
+
+					if(e instanceof SmartTrafficLightExtended) {
+						threadPool.submit(new TrafficLightApplicationsRun((SmartTrafficLightExtended) e));
 					}
 
 				}
@@ -191,6 +202,9 @@ public class SimulationEngine implements EngineInterface {
 					}
 					if (e instanceof SmartTrafficLight) {
 						threadPool.submit(new TrafficLightChangeColor((SmartTrafficLight) e));
+					}
+					if (e instanceof SmartTrafficLightExtended) {
+						threadPool.submit(new TrafficLightChangeColor((SmartTrafficLightExtended) e));
 					}
 				}
 				threadPool.waitForThreadPoolProcessing();

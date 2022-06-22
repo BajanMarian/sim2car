@@ -23,7 +23,7 @@ import com.beust.jcommander.Parameter;
 public class CarView {
 
 	@Parameter(names = {"--trackerLine"}, description = "Show line tracking car movements on the map.", arity = 1)
-	public static boolean trackerLine = true;
+	public static boolean trackerLine = false;
     
 	private Color carColor;
 	private GeoCar car;

@@ -5,7 +5,6 @@ import application.trafficLight.ApplicationTrafficLightControlData;
 import controller.newengine.SimulationEngine;
 import gui.TrafficLightView;
 import model.OSMgraph.Node;
-import model.mobility.MobilityEngine;
 import model.parameters.Globals;
 import utils.Pair;
 
@@ -17,7 +16,6 @@ import java.util.List;
 public class SmartTrafficLight extends TrafficLightModel {
 
     private Integer lockQueue = 1;
-    private MobilityEngine mobilityEngine;
 
     // tells what group is the green in a moment of time
     private boolean complementarySwitching = true;
@@ -32,7 +30,6 @@ public class SmartTrafficLight extends TrafficLightModel {
     private long normalTime = Globals.normalTrafficLightTime;
     private int checkPhase = 1;
     private int maximumCheckPhases = 4;
-
 
     private long lastTimeUpdate;
     private long decidedTime;
@@ -53,7 +50,6 @@ public class SmartTrafficLight extends TrafficLightModel {
         this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
         this.decidedTime = this.normalTime;
         this.shouldChangeColor = false;
-        this.mobilityEngine = MobilityEngine.getInstance();
         initComplementaryPairs();
     }
 
@@ -180,7 +176,8 @@ public class SmartTrafficLight extends TrafficLightModel {
                         });
                     }
                 }
-                waitingQueue.clear(); // SmartTrafficLight made a decision based on Queue dimension
+                // SmartTrafficLight already made a decision based on Queue dimension
+                waitingQueue.clear();
             }
 
             this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();

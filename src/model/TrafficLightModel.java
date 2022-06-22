@@ -47,6 +47,14 @@ public abstract class TrafficLightModel extends Entity{
         return false;
     }
 
+    public TrafficLightView findTrafficLightByWay(long wayId, long direction) {
+        for (TrafficLightView trafficLightView : trafficLightViewList) {
+            if (trafficLightView.getWayId() == wayId && trafficLightView.getDirection() == direction)
+                return trafficLightView;
+        }
+        return null;
+    }
+
     public TrafficLightView findTrafficLightByWay(long wayId) {
         for (TrafficLightView trafficLightView : trafficLightViewList) {
             if (trafficLightView.getWayId() == wayId)

@@ -340,8 +340,10 @@ public class Viewer {
 				if (trafficLightMaster instanceof GeoTrafficLightMaster) {
 					if (((GeoTrafficLightMaster)trafficLightMaster).needsColorsUpdate(simulationTime))
 						((GeoTrafficLightMaster)trafficLightMaster).updateTrafficLightViews(simulationTime);
-				} else {
+				} else if (trafficLightMaster instanceof SmartTrafficLight){
 					((SmartTrafficLight)trafficLightMaster).updateTrafficLightViews();
+				} else {
+					((SmartTrafficLightExtended)trafficLightMaster).updateTrafficLightViews();
 				}
 
 			}

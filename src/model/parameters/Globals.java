@@ -151,7 +151,7 @@ public class Globals {
 	@Parameter(names = {"--activeApps"}, description = "the accepted values ROUTING,TILES,STREET_VISITS,TRAFFIC_LIGHT_CONTROL."
 													 + "Please see ApplicationType for more details\n."
 													 + "Multiple applications can be passed using --activeApps=app1,app2,app3,..,appn")
-	public static String activeApps = "ROUTING"; //MODY
+	public static String activeApps = "ROUTING,TRAFFIC_LIGHT_CONTROL";
 	/* The default application is ROUTING_APP */
 	public static Vector<ApplicationType> activeApplications;
 

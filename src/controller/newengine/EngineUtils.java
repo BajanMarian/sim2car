@@ -63,7 +63,7 @@ public final class EngineUtils {
 	static {
 		logger = Logger.getLogger(EngineUtils.class.getName());
 		/* uncomment the following line in order to log to console */
-		logger.addHandler(new ConsoleHandler());
+		//logger.addHandler(new ConsoleHandler());
 	}
     
 	/* for traffic entities id */
@@ -424,11 +424,21 @@ public final class EngineUtils {
 					
 					Node node = mobilityEngine.streetsGraph.get(wayId).getNode(nodeId);
 					node.setWayId(wayId);
-					if (Globals.typeOfTrafficLight == 0) {
-						master = new GeoTrafficLightMaster(masterId, node, 3);
-					} else {
-						master = new SmartTrafficLight(masterId, node);
+					switch (Globals.typeOfTrafficLight) {
+						case 0:
+							master = new GeoTrafficLightMaster(masterId, node, 3);
+							break;
+						case 1:
+							master = new SmartTrafficLight(masterId, node);
+							break;
+						case 2:
+							master = new SmartTrafficLightExtended(masterId, node, 3);
+							break;
+						default:
+							System.err.println("There are no traffic lights of type specified");
+							break;
 					}
+
 					MapPoint mapPoint = MapPoint.getMapPoint(node);
 					master.setCurrentPos(mapPoint);
 					
@@ -445,7 +455,8 @@ public final class EngineUtils {
 					}
 				}
 				else {
-					if (st.countTokens() != 6)
+					if ( (st.countTokens() != 6 && (Globals.typeOfTrafficLight == 0 || Globals.typeOfTrafficLight == 1)) ||
+							(st.countTokens() != 7 && (Globals.typeOfTrafficLight == 2)))
 						continue;
 					// traffic light view line
 					Long wayId = Long.parseLong(keyword); 					/* way id */
@@ -458,10 +469,22 @@ public final class EngineUtils {
 					MapPoint currentPoint = MapPoint.getMapPoint(lat, lon, 1, wayId);
 					currentPoint.segmentIndex = seg;
 					currentPoint.cellIndex = cell;
-					TrafficLightView view = new TrafficLightView(viewer.getMapJ(), currentPoint, wayId, direction, count);
-					view.setColor(color);
-					viewer.addMapMarker(currentPoint.lat, currentPoint.lon, view.getColor(), String.valueOf(count));
-					master.addTrafficLightView(view);
+
+					TrafficLightView view;
+					if (Globals.typeOfTrafficLight == 2) {
+						int internalId = Integer.parseInt(st.nextToken());
+						view = new TrafficLightView(viewer.getMapJ(), currentPoint,
+								wayId, direction, count, internalId);
+						view.setColor(color);
+						viewer.addMapMarker(currentPoint.lat, currentPoint.lon, view.getColor(), String.valueOf(count));
+						master.addTrafficLightView(view);
+					} else if (Globals.typeOfTrafficLight == 0 || Globals.typeOfTrafficLight == 1) {
+						view = new TrafficLightView(viewer.getMapJ(), currentPoint, wayId, direction, count);
+						view.setColor(color);
+						viewer.addMapMarker(currentPoint.lat, currentPoint.lon, view.getColor(), String.valueOf(count));
+						master.addTrafficLightView(view);
+					}
+
 				}
 			}
 			br.close();

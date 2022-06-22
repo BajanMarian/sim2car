@@ -20,6 +20,8 @@ public class TrafficLightView {
 	private int direction;
 
 	int groupId;
+	int internId = -1;
+
 	JMapViewer map;
 
 	public TrafficLightView(JMapViewer map, MapPoint currentPoint,
@@ -39,6 +41,14 @@ public class TrafficLightView {
 		this.groupId = groupId;
 	}
 
+	public TrafficLightView(JMapViewer map, MapPoint currentPoint,
+							long wayId, int direction, int groupId, int localId) {
+		this(map, currentPoint, wayId, direction, direction);
+		this.groupId = groupId;
+		this.internId = localId;
+
+	}
+
 	public MapPoint getCurrentPoint() { return currentPoint; }
 	public void setCurrentPoint(MapPoint currentPoint) { this.currentPoint = currentPoint; }
 
@@ -50,6 +60,8 @@ public class TrafficLightView {
 
 	public void setColor(Color x) { trafficLightColor = x; }
 	public Color getColor() { return this.trafficLightColor; }
+
+	public int getInternId() {return internId;}
 
 	// TODO CHECK LOGIC + REFACTOR both setColor() and getColorString()
 	public void setColor(String color) {
@@ -95,7 +107,8 @@ public class TrafficLightView {
 					 * its color based on his implemented algorithm.
 					 * changeColor() was moved before checking lastMk == null, initially being position after this block
 					 */
-					changeColor();
+					if (internId == -1)
+						changeColor();
 
 					if (lastMk == null) {
 						//lastMk = new MapMarkerTrafficLight(trafficLightColor, currentPoint.lat, currentPoint.lon);
