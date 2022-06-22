@@ -114,7 +114,7 @@ public class SmartTrafficLight extends TrafficLightModel {
 
             // after the last big queue that passed, switching time between lights should be the normal one
             // cannot risk to give green light to nobody,then 5 cars are going to the red tf and wait for nothing
-            if (waitingQueue.size() == 0 && decidedTime > maxTime) {
+            if (waitingQueue.size() == 0 && decidedTime > normalTime) {
                 decidedTime = normalTime;
             }
 
@@ -189,6 +189,16 @@ public class SmartTrafficLight extends TrafficLightModel {
         } else if (receivedEmergencySignal) {
             this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
             this.decidedTime = (long) (Globals.maxTrafficLightTime * 1.3);
+        } else {
+            synchronized (lockQueue) {
+                if (waitingQueue.size() == 1 && decidedTime == normalTime) {
+                    lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
+                    decidedTime = Globals.passIntersectionTime;
+                    switchLightGroups();
+                    shouldChangeColor = true;
+                    waitingQueue.clear();
+                }
+            }
         }
     }
 
@@ -219,7 +229,6 @@ public class SmartTrafficLight extends TrafficLightModel {
 
         if (!waitingQueue.containsKey(street)) {
 
-            // TODO !!! sent notification to car with an estimated time to wait in order to adapt speed !!
             // neglect propagation time from sending the message to the time it is received
             Pair<Long, Integer> firstCarInQueue = new Pair<>(data.getTimeStop(), 1);
             waitingQueue.put(street, firstCarInQueue);
@@ -231,15 +240,10 @@ public class SmartTrafficLight extends TrafficLightModel {
                     new Pair<>(waitingQueue.get(street).getFirst(), waitingQueue.get(street).getSecond() + 1);
             waitingQueue.put(street, updatedQueue);
         }
-        int a = 10;
-        /** TODO !!! PROCESS THIS DATA
-         * data.getMapPoint(),
-         * data.getWayId(),
-         * data.getDirection(),
-         * waitingQueue.get(key).getSecond());*/
     }
 
     public void setGreenForEmergency(ApplicationTrafficLightControlData data) {
+
         if (isEmergencyMode == false) {
             receivedEmergencySignal = true;
             tlvEmergency = findTrafficLightByWay(data.getWayId());
@@ -250,12 +254,6 @@ public class SmartTrafficLight extends TrafficLightModel {
         if (greenGroup == 0)
             return 1;
         return 0;
-    }
-
-    public int getGreenGroupId() {
-        if (greenGroup == 0)
-            return 0;
-        return 1;
     }
 
     public void switchLightGroups() {
@@ -273,4 +271,5 @@ public class SmartTrafficLight extends TrafficLightModel {
         }
         return result;
     }
+
 }
