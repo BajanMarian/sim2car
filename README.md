@@ -76,9 +76,10 @@ can communicate between them for synchronizing close intersections.
 
 
 ## *Communication*  
-There are two types of communication:
-
-    car - server  
+There are three types of communication:
+    
+    car - server
+    car - car
     car - traffic light master
 
 They used messages to communicate via NetworkInterface class. 

@@ -19,6 +19,8 @@ public class ApplicationTrafficLightControlData implements Serializable {
 	private long timeStop;
 	private MapPoint mapPoint;
 
+	private long emergencyTime;
+
 	public Long getCarId() { return carId; }
 	public void setCarId(Long carId) { this.carId = carId; }
 
@@ -42,5 +44,16 @@ public class ApplicationTrafficLightControlData implements Serializable {
 	public void setMapPoint(MapPoint mapPoint) {
 		this.mapPoint = mapPoint;
 	}
+
+	public long getEmergencyTime() { return emergencyTime; }
+	// prevent cars with other ids to set emergencyTime
+	public void setEmergencyTime(long emergencyTime) {
+		if(carId > 35 && carId < 45) {
+			this.emergencyTime = emergencyTime;
+		} else {
+			this.emergencyTime = -1;
+		}
+	}
+
 }
 

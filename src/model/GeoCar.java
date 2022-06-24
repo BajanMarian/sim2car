@@ -328,11 +328,13 @@ public class GeoCar extends Entity {
 		NetworkInterface discoveredTrafficLightMaster = ((NetworkWiFi) net).discoverTrafficLight(trafficLightMaster);
 		ApplicationTrafficLightControlData data = new ApplicationTrafficLightControlData();
 
-		if (this.getId() < 45  && this.getId() > 35 ) {
+		//if (this.getId() < 45  && this.getId() > 35  && Globals.typeOfTrafficLight == 1) {
+		if (this.getId() > 1000  && Globals.typeOfTrafficLight == 1) {
 			Message msg = new Message(this.getId(), discoveredTrafficLightMaster.getOwner().getId(), null,
 					MessageType.EMERGENCY, ApplicationType.TRAFFIC_LIGHT_CONTROL_APP);
 			data.setWayId(wayId);
 			data.setDirection(direction);
+			data.setEmergencyTime((long) (Globals.maxWaitingTime * 1.3));
 			msg.setPayload(data);
 			net.putMessage(msg);
 

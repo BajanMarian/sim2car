@@ -15,27 +15,29 @@ import java.util.List;
 
 public class SmartTrafficLight extends TrafficLightModel {
 
-    private Integer lockQueue = 1;
-
-    // tells what group is the green in a moment of time
+    private final Integer lockQueue = 1;
     private boolean complementarySwitching = true;
+
+    // tells what group is green in a moment of time
     private int greenGroup;
     private Pair<List<TrafficLightView>, List<TrafficLightView>> complementaryGroups;
     private List<Integer> carsRemainedInQueue;
 
     // 1.If there are many long queues, then maxTime progressively increase his value to Globals.maxTrafficLightTime
     // 2.Covers the cases when there are big queues just for one direction, and from the other there are few;
-    // It is FAIR for 2,3 cars to not wait for 15 to pass.
-    private long maxTime = 60;
-    private long normalTime = Globals.normalTrafficLightTime;
+    // It is FAIR for 2,3 cars to not wait for 15 to pass
+    private long  inferiorLimitMaxTime = 60;
+    private long maxTime = inferiorLimitMaxTime;
+    private final long normalTime = Globals.normalTrafficLightTime;
+    private final int maximumCheckPhases = 4;
     private int checkPhase = 1;
-    private int maximumCheckPhases = 4;
 
     private long lastTimeUpdate;
     private long decidedTime;
     private boolean shouldChangeColor;
 
     private boolean receivedEmergencySignal = false;
+    private long emergencyTime;
     private boolean isEmergencyMode = false;
     private TrafficLightView tlvEmergency = null;
 
@@ -79,43 +81,39 @@ public class SmartTrafficLight extends TrafficLightModel {
 
 
     public boolean canCommute() {
-        if (SimulationEngine.getInstance().getSimulationTime() - this.lastTimeUpdate > this.decidedTime) {
-            return true;
-        }
-        return false;
+        return SimulationEngine.getInstance().getSimulationTime() - this.lastTimeUpdate > this.decidedTime;
     }
 
     public int sumCarsRemainedInQueues() {
-        int total = carsRemainedInQueue.stream().mapToInt(noCars -> noCars).sum();
-        return total;
+        return carsRemainedInQueue.stream().mapToInt(noCars -> noCars).sum();
     }
 
     public long computeTimeRaise() {
-        return sumCarsRemainedInQueues() / 2;
+        return (long) sumCarsRemainedInQueues() * Globals.passIntersectionTime / trafficLightViewList.size() ;
     }
 
     public void changeColor() {
 
-        // if enters this function, it should commute, meaning take a decision based on QueuesLen
+        // reset after 1 hour
+        if (SimulationEngine.getInstance().getSimulationTime() % 3600 == 0) {
+            this.maxTime = inferiorLimitMaxTime;
+        }
+        // if enters this block, it should commute, meaning take a decision based on QueuesLen
         if (canCommute()) {
 
-            // improve superior time
-            if (sumCarsRemainedInQueues() > 0) {
-                long timeRaise = computeTimeRaise();
-                if (this.maxTime + timeRaise < Globals.maxTrafficLightTime) {
-                    this.maxTime += timeRaise;
-                }
-
-            }
-
-            // after the last big queue that passed, switching time between lights should be the normal one
-            // cannot risk to give green light to nobody,then 5 cars are going to the red tf and wait for nothing
+            // after the last big queue that passed, switching time between lights should be the minimum one or
+            // the normal one; cannot risk to give green light to nobody,then 5 cars are going to the red tf
+            // and wait for nothing
             if (waitingQueue.size() == 0 && decidedTime > normalTime) {
-                decidedTime = normalTime;
+                if(carsRemainedInQueue.get(getRedGroupId()) == 0) {
+                    decidedTime = Globals.passIntersectionTime;
+                } else {
+                    decidedTime = normalTime;
+                }
             }
 
             // minimum decided time is time to pass for a single car; we can check by maximumCheckPhases=4 times to see
-            // if there are cars that coming and, if there are not, we should reset to normal. Energy argument.
+            // if there are incoming cars and, if there are not, we should reset to normal.
             if (waitingQueue.size() == 0 && decidedTime < normalTime) {
                 if (checkPhase == maximumCheckPhases) {
                     decidedTime = normalTime;
@@ -127,6 +125,17 @@ public class SmartTrafficLight extends TrafficLightModel {
                 // if any car came to a traffic light, reset checkPhase
                 checkPhase = 1;
             }
+
+            // improve maxTime one time per cycle (green -> red -> green)
+            if (greenGroup == 0 && sumCarsRemainedInQueues() > 0) {
+                long timeRaise = computeTimeRaise();
+                if (this.maxTime + timeRaise < Globals.maxTrafficLightTime) {
+                    this.maxTime += timeRaise;
+                }
+                carsRemainedInQueue.set(0, 0);
+                carsRemainedInQueue.set(1, 0);
+            }
+
 
             // exit emergencyMode by restoring the lights color
             if (isEmergencyMode) {
@@ -185,7 +194,7 @@ public class SmartTrafficLight extends TrafficLightModel {
             this.shouldChangeColor = true;
         } else if (receivedEmergencySignal) {
             this.lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
-            this.decidedTime = (long) (Globals.maxTrafficLightTime * 1.3);
+            this.decidedTime = emergencyTime;
         } else {
             synchronized (lockQueue) {
                 if (waitingQueue.size() == 1 && decidedTime == normalTime) {
@@ -241,9 +250,13 @@ public class SmartTrafficLight extends TrafficLightModel {
 
     public void setGreenForEmergency(ApplicationTrafficLightControlData data) {
 
-        if (isEmergencyMode == false) {
-            receivedEmergencySignal = true;
-            tlvEmergency = findTrafficLightByWay(data.getWayId());
+        if (!isEmergencyMode) {
+            if (data.getEmergencyTime() != -1) {
+                receivedEmergencySignal = true;
+                tlvEmergency = findTrafficLightByWay(data.getWayId());
+                emergencyTime = data.getEmergencyTime();
+            }
+
         }
     }
 

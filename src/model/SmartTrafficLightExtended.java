@@ -22,7 +22,7 @@ public class SmartTrafficLightExtended extends TrafficLightModel{
     private int phases = 0;
     private int maxPhaseNumber;
 
-    private long maxTime = 60;
+    private long inferiorLimitMaxTime = 60;
     private long normalTime = 40;
     // if the decided time is checkTime, then all trafficLight stays the same till one car passes by
     private long checkTime = 10;
@@ -41,7 +41,7 @@ public class SmartTrafficLightExtended extends TrafficLightModel{
             List<TrafficLightView> group = new ArrayList<>();
             groups.add(group);
             orderQueue.add(i);
-            maxTimeLimits.add(maxTime);
+            maxTimeLimits.add(inferiorLimitMaxTime);
         }
     }
 
@@ -73,10 +73,13 @@ public class SmartTrafficLightExtended extends TrafficLightModel{
 
                 synchronized (lockQueue) {
 
-                    // when checking for groups, expect to find at least one queue with cars due to condition
+                    // when checking for groups, expect to find at least one queue with cars due to condition from above
                     for (i = 1; i <= maximumChecks; i++) {
 
-                        /* note that part with all longQueues was removed */
+                        /* note: that part with all longQueues was removed */
+
+                        orderQueue.addLast(orderQueue.removeFirst());
+
                         int maxQueueLen = -1;
                         long allCarsStopped = 0; /* could be kept for statistics */
                         int nextId = orderQueue.getFirst();
@@ -90,7 +93,7 @@ public class SmartTrafficLightExtended extends TrafficLightModel{
 
                             for (Pair<Long, Integer> key : waitingQueue.keySet()) {
 
-                                if (tfl == findTrafficLightByWay(key.getFirst(), key.getSecond())) {
+                                if (tfl == findTrafficLightByWay(key.getFirst())) {
                                     int currentQueueLen = waitingQueue.get(key).getSecond();
                                     allCarsStopped += waitingQueue.get(key).getSecond();
 
@@ -102,7 +105,7 @@ public class SmartTrafficLightExtended extends TrafficLightModel{
                             }
                         }
 
-                        // need to remove the street associated with traffic lights that come next
+                        // need to remove the streets associated with traffic lights that come next
                         if (!streetsToRemove.isEmpty()) {
                             streetsToRemove.forEach(street -> waitingQueue.remove(street));
                         }
@@ -114,9 +117,9 @@ public class SmartTrafficLightExtended extends TrafficLightModel{
                             int maxPassingCars = (int) (maxTimeLimits.get(nextId) / Globals.passIntersectionTime);
 
                             if (maxPassingCars > maxQueueLen) {
-                                decidedTime = maxQueueLen * Globals.passIntersectionTime;
+                                decidedTime = (long) maxQueueLen * Globals.passIntersectionTime;
                                 // slowly decrease
-                                if (maxTimeLimits.get(nextId) - Globals.passIntersectionTime > maxTime) {
+                                if (maxTimeLimits.get(nextId) - Globals.passIntersectionTime > inferiorLimitMaxTime) {
                                     maxTimeLimits.set(nextId, maxTimeLimits.get(nextId) - Globals.passIntersectionTime);
                                 }
                             } else {
@@ -137,18 +140,18 @@ public class SmartTrafficLightExtended extends TrafficLightModel{
                             trafficLightGroup.forEach(tfl -> {
                                 tfl.setColor("green");
                             });
-                            // set these lights on red
+                            // set previous lights on red
                             groups.get(orderQueue.getLast()).forEach(tfl -> {
                                 tfl.setColor("red");
                             });
 
                             lastTimeUpdate = SimulationEngine.getInstance().getSimulationTime();
-                            orderQueue.addLast(orderQueue.removeFirst());
                             needsRendering = true;
                             break;
                         } else {
-                            // if in this current check there were no cars found at red light, move to next group
-                            orderQueue.addLast(orderQueue.removeFirst());
+                            groups.get(orderQueue.getLast()).forEach(tfl -> {
+                                tfl.setColor("red");
+                            });
                         }
                     }
                 }
