@@ -1,11 +1,8 @@
 # sim2car
 Simulator Sim2Car
 
-Before you run the simulator make sure you have the Traffic Light Config file (e.g for Beijing the file is trafficLights_beijing.txt) added to this folder:
-processeddata\maps\XmlBeijing\
-
 ## *Applications*
-Note that there are several application which needs activation depending on your needs:
+Note that there are several applications which needs activation depending on your needs:
 - ROUTING
 - TILES
 - STREET_VISITS
@@ -22,6 +19,9 @@ In order to activate them you should go to **Global.java** and set  *activeApps 
 Mandatory command line argument: the path to the city properties file. 
 
     -prop src\configurations\simulator\rome.properties
+
+Before you run the simulator make sure you have the Traffic Light Config file (e.g for Beijing the file is trafficLights_beijing.txt)
+added to this folder:processeddata\maps\XmlBeijing\
 
 In Globals.java there is a huge list of arguments that can be used. Depending on your needs, you should
 take a look and set those variables accordingly. A few other examples, but not all are listed below:
@@ -62,7 +62,7 @@ At this moment, there are 3 type of entities:
     2.servers
     3.traffic lights
 
-Each entity has an ID and, when you run the simulator, you can see their range ids displayed.
+Each entity has an ID and; when you run the simulator, you can see their range ids displayed.
 
 *Cars* have their own routes and are using the ROUTING_APP to find their destination faster. Cars can detect entities like 
 traffic lights and other cars. They can adept their speed, got statistics about street crowdedness, stop at traffic lights,
@@ -72,7 +72,8 @@ avoid collision with other cars, compute their average speed and fuel consumptio
 
 *Traffic lights* are defined by a master and additional traffic lights slaves. The master can be a GeoTrafficLightMaster
 or a SmartTrafficLight. The slaves are always instances of TrafficLightViews class and are not considered entities. Masters
-can communicate between them for synchronizing close intersections.
+can communicate between them for synchronizing close intersections. There is also a class called SmartTrafficLightExtended
+which represents a traffic light which can have multiple phases.
 
 
 ## *Communication*  
@@ -91,7 +92,7 @@ it is processed and an associated action is executed.
 
 ## *Loggers*
 Loggers do not work even though you activate the logging params in Globals. In order to use them to print information to console
-you should add the following lines in you classes (a consoleHandler should be attached to logger).
+you should add the following lines in your classes (a consoleHandler should be attached to logger).
     
     static {
 		logger = Logger.getLogger(EngineUtils.class.getName());
@@ -99,13 +100,17 @@ you should add the following lines in you classes (a consoleHandler should be at
 	}
 
 ## *Errors*
-        Uses logger in EngineUtils lead to:
+        Use of logger in EngineUtils leads to:
             controller.newengine.EngineUtils addApplicationToServer
             INFO:  Failed to create application with type TRAFFIC_LIGHT_CONTROL_APP
         This log SHOULD NOT occur because the traffic_light apllication is is not activated by addApplicationToServer.
         It is a bug in the code.
 
-## *Patterns to search after*
-    !!! = might be interesting to search for
+## *Technical notes* 
+    1.The project was tested with the followind SDKs: JavaSE-1.8, Azul-1.8, Correto-1.8
+    2.When working in your IDE, make sure to mark data and statistics folders as *excluded*. They should not be indexed.
+
+## *Patterns to search for*
+    !!! = might be interesting to search for or TODOs
     
     
