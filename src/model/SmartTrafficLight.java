@@ -1,6 +1,7 @@
 package model;
 
 import application.Application;
+import application.trafficLight.ApplicationTrafficLightControl;
 import application.trafficLight.ApplicationTrafficLightControlData;
 import controller.newengine.SimulationEngine;
 import gui.TrafficLightView;
@@ -14,6 +15,10 @@ import java.util.List;
 
 
 public class SmartTrafficLight extends TrafficLightModel {
+
+    private long sumWaitingTime = 0;
+    private long sumQueueLength = 0;
+    private long noWaits = 0;
 
     private final Integer lockQueue = 1;
     private boolean complementarySwitching = true;
@@ -94,6 +99,10 @@ public class SmartTrafficLight extends TrafficLightModel {
 
     public void changeColor() {
 
+        if (SimulationEngine.getInstance().getSimulationTime() < 250) {
+            return;
+        }
+
         // reset after 1 hour
         if (SimulationEngine.getInstance().getSimulationTime() % 3600 == 0) {
             this.maxTime = inferiorLimitMaxTime;
@@ -105,7 +114,7 @@ public class SmartTrafficLight extends TrafficLightModel {
             // the normal one; cannot risk to give green light to nobody,then 5 cars are going to the red tf
             // and wait for nothing
             if (waitingQueue.size() == 0 && decidedTime > normalTime) {
-                if(carsRemainedInQueue.get(getRedGroupId()) == 0) {
+                if (carsRemainedInQueue.get(getRedGroupId()) == 0) {
                     decidedTime = Globals.passIntersectionTime;
                 } else {
                     decidedTime = normalTime;
@@ -150,6 +159,7 @@ public class SmartTrafficLight extends TrafficLightModel {
             if (Globals.useDynamicTrafficLights && complementarySwitching && waitingQueue.size() > 0) {
 
                 long maxQueueLen = -1;
+                Pair<Long, Integer> longQueueStreet = null;
                 long allCarsStopped = 0;
                 List<Integer> longQueues = new ArrayList<>();
                 int queueLenCanPass = (int) (this.maxTime / Globals.passIntersectionTime);
@@ -161,6 +171,7 @@ public class SmartTrafficLight extends TrafficLightModel {
 
                         if (currentQueueLen > maxQueueLen) {
                             maxQueueLen = currentQueueLen;
+                            longQueueStreet = key;
                         }
 
                         if (queueLenCanPass < currentQueueLen) {
@@ -170,9 +181,12 @@ public class SmartTrafficLight extends TrafficLightModel {
                 }
 
                 if (allCarsStopped > 0) {
-
+                    collectWaitingQueueStatistics(waitingQueue.get(longQueueStreet).getFirst(), waitingQueue.get(longQueueStreet).getSecond());
                     if (longQueues.isEmpty()) {
-                         decidedTime = maxQueueLen * Globals.passIntersectionTime;
+                        decidedTime = maxQueueLen * Globals.passIntersectionTime;
+                        if (maxQueueLen == 1) {
+                            decidedTime += Globals.passIntersectionTime;
+                        }
                     } else {
 
                         decidedTime = this.maxTime;
@@ -202,10 +216,12 @@ public class SmartTrafficLight extends TrafficLightModel {
                     decidedTime = Globals.passIntersectionTime;
                     switchLightGroups();
                     shouldChangeColor = true;
+                    collectWaitingQueueStatistics(waitingQueue.get(0).getFirst(), waitingQueue.get(0).getSecond());
                     waitingQueue.clear();
                 }
             }
         }
+
     }
 
     public void updateTrafficLightViews() {
@@ -272,6 +288,32 @@ public class SmartTrafficLight extends TrafficLightModel {
         } else {
             greenGroup = 0;
         }
+    }
+
+    public void sendStatistics() {
+        if (noWaits == 0)
+            return;
+
+        double avg_waitingTime = sumWaitingTime / noWaits;
+        double avg_queueLength = sumQueueLength / noWaits;
+        ApplicationTrafficLightControl.saveData(this.getId(), avg_waitingTime, avg_queueLength);
+    }
+
+    public void collectWaitingQueueStatistics(long stopTime, long noCarsWaiting) {
+        sumWaitingTime += (SimulationEngine.getInstance().getSimulationTime() - stopTime);
+        sumQueueLength += noCarsWaiting;
+        noWaits++;
+    }
+
+    public String stopApplications() {
+        /* Send statistics */
+        sendStatistics();
+
+        String result = "";
+        for (Application application : this.applications) {
+            result += application.stop();
+        }
+        return result;
     }
 
     public String runApplications() {

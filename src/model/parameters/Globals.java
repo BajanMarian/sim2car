@@ -62,7 +62,7 @@ public class Globals {
     public static int maxTrafficLightTime = 90;
 	
 	@Parameter(names = {"--passIntersectionTime"}, description = "The time needed by a car to pass the intersection.")
-    public static int passIntersectionTime = 3;
+    public static int passIntersectionTime = 4;
 	
 	@Parameter(names = {"--loadGraph"}, description = "Activate the loading graph.", arity = 1)
     public static boolean loadGraph = false;
@@ -98,7 +98,7 @@ public class Globals {
 	public static boolean useDynamicTrafficLights = true;
 
 	@Parameter(names = {"--typeOfTrafficLight"}, description = "0=GeoTrafficLightMaster, 1=SmartTrafficLight")
-	public static int typeOfTrafficLight = 1;
+	public static int typeOfTrafficLight = 0;
 
 	@Parameter(names = {"--maxNoTrafficLight"}, description = "Maximum number of trafficLightsMasters read from their file")
 	public static int maxNoTrafficLight = 1000;

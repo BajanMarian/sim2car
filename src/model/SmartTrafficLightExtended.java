@@ -22,8 +22,8 @@ public class SmartTrafficLightExtended extends TrafficLightModel{
     private int phases = 0;
     private int maxPhaseNumber;
 
-    private long inferiorLimitMaxTime = 60;
-    private long normalTime = 40;
+    private long inferiorLimitMaxTime = 30;
+    private long normalTime = 20;
     // if the decided time is checkTime, then all trafficLight stays the same till one car passes by
     private long checkTime = 10;
 
@@ -62,6 +62,10 @@ public class SmartTrafficLightExtended extends TrafficLightModel{
 
     @Override
     public void changeColor() {
+
+        if (SimulationEngine.getInstance().getSimulationTime() < 300) {
+            return;
+        }
 
         if (canCommute()) {
 

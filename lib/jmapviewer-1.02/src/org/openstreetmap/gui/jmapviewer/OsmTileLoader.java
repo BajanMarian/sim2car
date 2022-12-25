@@ -53,8 +53,8 @@ public class OsmTileLoader implements TileLoader {
                 try {
                     URLConnection conn = loadTileFromOsm(tile);
                     conn.addRequestProperty("User-Agent", "Mozilla");
-                    conn.setReadTimeout(5000);
-                    conn.setConnectTimeout(5000);
+                    conn.setReadTimeout(10000);
+                    conn.setConnectTimeout(10000);
                     loadTileMetadata(tile, conn);
                     if ("no-tile".equals(tile.getValue("tile-info"))) {
                         tile.setError("No tile at this zoom level");

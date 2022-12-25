@@ -709,10 +709,12 @@ public class GeoCar extends Entity {
 			city += "/";
 			if (Globals.useTrafficLights)
 				city += "TL";
-			if (Globals.useDynamicTrafficLights)
+			if (Globals.useDynamicTrafficLights && Globals.typeOfTrafficLight == 0)
 				city += "DTL";
 			if (!Globals.useTrafficLights && !Globals.useDynamicTrafficLights)
 				city += "NA";
+			if (Globals.useDynamicTrafficLights && Globals.typeOfTrafficLight == 1)
+				city += "SMART_TL";
 
 			filename = city + "/" + filename;
 			new File(city).mkdirs();

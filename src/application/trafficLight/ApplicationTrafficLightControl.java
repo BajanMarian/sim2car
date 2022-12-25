@@ -104,10 +104,12 @@ public class ApplicationTrafficLightControl extends Application {
 
 			String fileSpecifier = null;
 
-			if (Globals.useDynamicTrafficLights) {
+			if (Globals.useDynamicTrafficLights && Globals.typeOfTrafficLight == 0) {
 				fileSpecifier = "_waitingTime&QueueLength_withDynamicTrafficLights.txt";
 			} else if (Globals.useTrafficLights) {
 				fileSpecifier = "_waitingTime&QueueLength_withTrafficLights.txt";
+			} else if (Globals.useDynamicTrafficLights && Globals.typeOfTrafficLight == 1) {
+				fileSpecifier = "_waitingTime&QueueLength_withSmartTL.txt";
 			}
 
 			if(fileSpecifier != null) {

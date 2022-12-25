@@ -319,6 +319,9 @@ public class SimulationEngine implements EngineInterface {
 				((GeoTrafficLightMaster) e).stopApplications();
 				((GeoTrafficLightMaster) e).stopNetwork();
 			}
+			if (e instanceof SmartTrafficLight) {
+				((SmartTrafficLight) e).stopApplications();
+			}
 		}
 		for( ApplicationType type : Globals.activeApplications )
 		{

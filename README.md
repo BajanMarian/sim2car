@@ -37,7 +37,7 @@ If you want to use traffic lights in your simulation, note that it is mandatory 
     useDynamicTrafficLights = true;
     GeoTrafficLightMaster implements static traffic lights and dynamic traffic lights.
     SmartTraffucLight only implements dynamic traffic lights.
-    You need to set these variables accordinglu with "typeOfTrafficLight"
+    You need to set these variables accordingly with "typeOfTrafficLight"
 
 For displaying entities IDs in GUI you should set:
 
